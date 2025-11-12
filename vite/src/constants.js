@@ -6,7 +6,7 @@ if(process.env.NODE_ENV==="production"){
 }
 // eslint-disable-next-line no-undef
 else if(process.env.NODE_ENV==="development"){
-    ENDPOINT='http://localhost:3001';
+    ENDPOINT='http://localhost:8085';
 }
 
 export default ENDPOINT;

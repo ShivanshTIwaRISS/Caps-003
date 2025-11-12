@@ -13,6 +13,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get('/', cors(), (req, res) => {
+    res.send('This route allows all origins');
+});
+
 app.post('/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body;
