@@ -11,15 +11,21 @@ const prisma = new PrismaClient();
 const app = express();
 
 
+const allowedOrigins = [
+  "https://caps-003.vercel.app",
+  "http://localhost:5173"
+];
+
 app.use(cors({
-  origin: "https://caps-003.vercel.app",
+  origin: allowedOrigins,
   credentials: true,
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Content-Type, Authorization"
 }));
 
-
 app.options("*", cors());
+
+
 
 app.use(express.json());
 
