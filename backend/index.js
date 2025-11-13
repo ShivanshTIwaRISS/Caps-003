@@ -10,31 +10,41 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(express.json());
-app.use(cors({origin:"*", credentials: true}));
+// CORS FIX FOR RENDER
+app.use(
+    cors({
+        origin: "*",   // <= change to your frontend domain after deployment
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 
-app.get('/', cors(), (req, res) => {
-    res.send('This route allows all origins');
+app.use(express.json());
+
+app.get('/', (req, res) => {
+    res.send('Backend is running successfully.');
 });
 
+// SIGNUP
 app.post('/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
+
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
-        
+
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });
-        
+
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         const user = await prisma.user.create({
             data: {
                 name,
@@ -45,7 +55,7 @@ app.post('/signup', async (req, res) => {
 
         const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-        
+
         await prisma.refreshToken.create({
             data: {
                 token: refreshToken,
@@ -60,14 +70,15 @@ app.post('/signup', async (req, res) => {
     }
 });
 
+// LOGIN
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         if (!email || !password) {
             return res.status(400).json({ message: 'Missing email or password' });
         }
-        
+
         const user = await prisma.user.findUnique({
             where: { email }
         });
@@ -83,7 +94,7 @@ app.post('/login', async (req, res) => {
 
         const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-        
+
         await prisma.refreshToken.create({
             data: {
                 token: refreshToken,
@@ -98,6 +109,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// REFRESH TOKEN
 app.post('/refresh', async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -128,6 +140,7 @@ app.post('/refresh', async (req, res) => {
     }
 });
 
+// AUTH MIDDLEWARE
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -145,6 +158,7 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// GET USERS
 app.get('/users', authenticateToken, async (req, res) => {
     try {
         const users = await prisma.user.findMany({
@@ -161,6 +175,7 @@ app.get('/users', authenticateToken, async (req, res) => {
     }
 });
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
+// ⭐ UPDATED FOR RENDER
+app.listen(process.env.PORT || 5000, () => {
+    console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
