@@ -10,7 +10,7 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
-// ⭐ CORS CONFIG FOR RENDER + VERCEL FRONTEND
+
 app.use(cors({
   origin: "https://caps-003.vercel.app",
   credentials: true,
@@ -18,7 +18,7 @@ app.use(cors({
   allowedHeaders: "Content-Type, Authorization"
 }));
 
-// ⭐ HANDLE PREFLIGHT OPTIONS
+
 app.options("*", cors());
 
 app.use(express.json());
@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
     res.send('Backend is running successfully.');
 });
 
-// SIGNUP
+
 app.post('/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -58,7 +58,7 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-// LOGIN
+
 app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -86,7 +86,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// REFRESH TOKEN
+
 app.post('/refresh', async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -107,7 +107,7 @@ app.post('/refresh', async (req, res) => {
     }
 });
 
-// AUTH MIDDLEWARE
+
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -121,7 +121,7 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// GET USERS
+
 app.get('/users', authenticateToken, async (req, res) => {
     try {
         const users = await prisma.user.findMany({
@@ -134,7 +134,7 @@ app.get('/users', authenticateToken, async (req, res) => {
     }
 });
 
-// ⭐ CORRECT FOR RENDER HOSTING
+
 app.listen(process.env.PORT || 5000, () => {
     console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
