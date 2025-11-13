@@ -51,7 +51,7 @@ app.post('/signup', async (req, res) => {
 
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id } });
 
-        res.status(201).json({ accessToken, refreshToken, user });
+        res.status(201).json({ accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email } });
     } catch (err) {
         console.error('Signup error:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
@@ -79,7 +79,7 @@ app.post('/login', async (req, res) => {
 
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id } });
 
-        res.json({ accessToken, refreshToken, user });
+        res.json({ accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email } });
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
