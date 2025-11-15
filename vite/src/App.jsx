@@ -27,18 +27,18 @@ const handleSignup = async (e) => {
   }
 };
 
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/login", form);
-      localStorage.setItem("token", res.data.token);
-      setView("home");
-      setForm({ name: "", email: "", password: "" });
-    } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
-    }
-  };
+const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post("/login", form);
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+    setView("home");
+    setForm({ name: "", email: "", password: "" });
+  } catch (err) {
+    alert(err.response?.data?.message || "Login failed");
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");
