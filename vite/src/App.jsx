@@ -14,17 +14,19 @@ export default function App() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/signup", form);
-      localStorage.setItem("token", res.data.token);
-      setView("home");
-      setForm({ name: "", email: "", password: "" });
-    } catch (err) {
-      alert(err.response?.data?.message || "Signup failed");
-    }
-  };
+const handleSignup = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post("/signup", form);
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+    setView("home");
+    setForm({ name: "", email: "", password: "" });
+  } catch (err) {
+    alert(err.response?.data?.message || "Signup failed");
+  }
+};
+
 
   const handleLogin = async (e) => {
     e.preventDefault();

@@ -83,6 +83,9 @@ app.post('/login', async (req, res) => {
         const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id } });
 
         res.json({ accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email , createdAt: user.createdAt , updatedAt: user.updatedAt } });
@@ -144,3 +147,6 @@ app.get('/users', authenticateToken, async (req, res) => {
 app.listen(process.env.PORT || 5000, () => {
     console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
+
+
+// https://caps-003.vercel.app/
