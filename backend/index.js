@@ -83,8 +83,8 @@ app.post('/login', async (req, res) => {
         const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
-        localStorage.setItem("token", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
+        // localStorage.setItem("token", accessToken);
+        // localStorage.setItem("refreshToken", refreshToken);
 
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id } });
 
