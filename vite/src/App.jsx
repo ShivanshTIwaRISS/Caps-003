@@ -6,7 +6,7 @@ import api from "./services/api";
 import Login from "./Login";
 import Signup from "./Signup";
 
-// import StorePreview from "./StorePreview"; // KEEP your existing file if you had it
+import StorePreview from "./StorePreview"; // KEEP your existing file if you had it
 
 export default function App() {
   const [view, setView] = useState("login");
