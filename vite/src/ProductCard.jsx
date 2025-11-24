@@ -5,14 +5,15 @@ import { useNavigate } from "react-router-dom";
 export default function ProductCard({ product, onWishlistToggle }) {
   const navigate = useNavigate();
 
-  const openProduct = () => navigate(`/products/${product.id}`);
+  // ✅ FIXED: Route corrected → /product/:id
+  const openProduct = () => navigate(`/product/${product.id}`);
 
   const toggleWishlist = (e) => {
     e.stopPropagation();
     onWishlistToggle(product.id);
   };
 
-  /* 
+  /*
   const addToCart = (e) => {
     e.stopPropagation();
     addItemToCart({
