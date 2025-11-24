@@ -59,7 +59,7 @@ export default function App() {
     <div className="os-root">
       <Routes>
         {/* Default → HOME (not login anymore) */}
-        <Route path="/" element={<Navigate to="/home" />} />
+        {/* <Route path="/" /> */}
 
         {/* LOGIN */}
         <Route
