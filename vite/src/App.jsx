@@ -122,7 +122,7 @@ export default function App() {
         />
 
         {/* Unknown routes → HOME */}
-        <Route path="*" element={<Navigate to="/home" />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   );
