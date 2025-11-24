@@ -1,16 +1,19 @@
-// Signup.jsx
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import Navbar from "./Navbar";
 
-export default function Signup({
-  form,
-  handleChange,
-  handleSignup,
-  setView,
-  view,
-  onLogout
-}) {
+export default function Signup({ form, handleChange, handleSignup }) {
+  const navigate = useNavigate();
+
+  // ✅ If already logged in → redirect to home
+  useEffect(() => {
+    const u = localStorage.getItem("user");
+    if (u) navigate("/home");
+  }, []);
+
   return (
     <>
-      <TopNav view={view} setView={setView} onLogout={onLogout} />
+      <Navbar />
 
       <div className="auth-shell">
         <MarketingPane />
@@ -20,7 +23,7 @@ export default function Signup({
             <div className="welcome-badge">OS</div>
             <div>
               <h1>Welcome to OS</h1>
-              <p>Sign in or create your account in seconds.</p>
+              <p>Create your account in seconds.</p>
             </div>
           </div>
 
@@ -32,6 +35,7 @@ export default function Signup({
               onChange={handleChange}
               placeholder="Jane Doe"
             />
+
             <FormField
               label="Email"
               name="email"
@@ -40,6 +44,7 @@ export default function Signup({
               placeholder="you@company.com"
               type="email"
             />
+
             <FormField
               label="Password"
               name="password"
@@ -53,7 +58,11 @@ export default function Signup({
 
             <p className="swap">
               Already have an account?{" "}
-              <button type="button" className="linklike" onClick={() => setView("login")}>
+              <button
+                type="button"
+                className="linklike"
+                onClick={() => navigate("/login")}
+              >
                 Login
               </button>
             </p>
@@ -64,8 +73,7 @@ export default function Signup({
   );
 }
 
-/* All same components as in Login.jsx pasted here */
-
+/* ------------------ FormField ------------------ */
 function FormField({ label, name, value, onChange, placeholder, type = "text" }) {
   return (
     <label className="field">
@@ -83,26 +91,7 @@ function FormField({ label, name, value, onChange, placeholder, type = "text" })
   );
 }
 
-function TopNav({ view, setView, onLogout }) {
-  return (
-    <header className="topnav">
-      <div className="brand">
-        <span className="brand-dot" /> OS
-      </div>
-      <div className="nav-actions">
-        {view === "home" ? (
-          <button className="ghost" onClick={onLogout}>Logout</button>
-        ) : (
-          <>
-            <button className={`ghost ${view === "login" ? "active" : ""}`} onClick={() => setView("login")}>Login</button>
-            <button className={`chip ${view === "signup" ? "active" : ""}`} onClick={() => setView("signup")}>Sign up</button>
-          </>
-        )}
-      </div>
-    </header>
-  );
-}
-
+/* ------------------ MarketingPane ------------------ */
 function MarketingPane() {
   return (
     <div className="mk-pane">
@@ -148,8 +137,4 @@ function TinyBars() {
       ))}
     </div>
   );
-}
-
-function StorePreview() {
-  return <></>;
 }

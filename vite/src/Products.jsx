@@ -5,12 +5,12 @@ import ProductCard from "./ProductCard";
 
 export default function Products() {
   const location = useLocation();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
-  const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem("wishlist");
-    return saved ? JSON.parse(saved) : [];
-  });
+
+  // ❌ REMOVED LOCALSTORAGE — wishlist now in-memory only
+  const [wishlist, setWishlist] = useState([]);
 
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState("");
@@ -21,13 +21,17 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(1);
   const PRODUCTS_PER_PAGE = 20;
 
+  // -------------------------------------
   // Extract search query
+  // -------------------------------------
   useEffect(() => {
     const q = new URLSearchParams(location.search).get("search") || "";
     setSearchTerm(q);
   }, [location.search]);
 
-  // Fetch API
+  // -------------------------------------
+  // Fetch products
+  // -------------------------------------
   const fetchProducts = useCallback(() => {
     let url = `https://dummyjson.com/products?limit=${PRODUCTS_PER_PAGE}&skip=${
       (page - 1) * PRODUCTS_PER_PAGE
@@ -57,11 +61,11 @@ export default function Products() {
       if (priceFilter === "low") items.sort((a, b) => a.price - b.price);
       if (priceFilter === "high") items.sort((a, b) => b.price - a.price);
 
-      // Sort
+      // Sort options
       if (sortKey === "price") items.sort((a, b) => a.price - b.price);
       if (sortKey === "rating") items.sort((a, b) => b.rating - a.rating);
 
-      // Wishlist sync
+      // APPLY wishlist mapping
       const updated = items.map((product) => ({
         ...product,
         isInWishlist: wishlist.includes(product.id),
@@ -78,13 +82,15 @@ export default function Products() {
     fetchProducts();
   }, [fetchProducts]);
 
+  // -------------------------------------
+  // Wishlist toggle (IN-MEMORY ONLY)
+  // -------------------------------------
   const handleWishlistToggle = (id) => {
     setWishlist((prev) => {
       let updated;
       if (prev.includes(id)) updated = prev.filter((x) => x !== id);
       else updated = [...prev, id];
-      localStorage.setItem("wishlist", JSON.stringify(updated));
-      return updated;
+      return updated; // ❌ NO LOCALSTORAGE ANYMORE
     });
   };
 

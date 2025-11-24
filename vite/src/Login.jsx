@@ -1,16 +1,19 @@
-// Login.jsx
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import Navbar from "./Navbar";
 
-export default function Login({
-  form,
-  handleChange,
-  handleLogin,
-  setView,
-  view,
-  onLogout
-}) {
+export default function Login({ form, handleChange, handleLogin }) {
+  const navigate = useNavigate();
+
+  // ✅ If already logged in → redirect to home
+  useEffect(() => {
+    const u = localStorage.getItem("user");
+    if (u) navigate("/home");
+  }, []);
+
   return (
     <>
-      <TopNav view={view} setView={setView} onLogout={onLogout} />
+      <Navbar />
 
       <div className="auth-shell">
         <MarketingPane />
@@ -33,6 +36,7 @@ export default function Login({
               placeholder="you@company.com"
               type="email"
             />
+
             <FormField
               label="Password"
               name="password"
@@ -46,7 +50,11 @@ export default function Login({
 
             <p className="swap">
               Don’t have an account?{" "}
-              <button type="button" className="linklike" onClick={() => setView("signup")}>
+              <button
+                type="button"
+                className="linklike"
+                onClick={() => navigate("/signup")}
+              >
                 Create one
               </button>
             </p>
@@ -72,27 +80,6 @@ function FormField({ label, name, value, onChange, placeholder, type = "text" })
         autoComplete={name}
       />
     </label>
-  );
-}
-
-/* ------------------ TopNav ------------------ */
-function TopNav({ view, setView, onLogout }) {
-  return (
-    <header className="topnav">
-      <div className="brand">
-        <span className="brand-dot" /> OS
-      </div>
-      <div className="nav-actions">
-        {view === "home" ? (
-          <button className="ghost" onClick={onLogout}>Logout</button>
-        ) : (
-          <>
-            <button className={`ghost ${view === "login" ? "active" : ""}`} onClick={() => setView("login")}>Login</button>
-            <button className={`chip ${view === "signup" ? "active" : ""}`} onClick={() => setView("signup")}>Sign up</button>
-          </>
-        )}
-      </div>
-    </header>
   );
 }
 
@@ -142,9 +129,4 @@ function TinyBars() {
       ))}
     </div>
   );
-}
-
-/* ------------------ StorePreview (if needed in Login) ------------------ */
-function StorePreview() {
-  return <></>;
 }

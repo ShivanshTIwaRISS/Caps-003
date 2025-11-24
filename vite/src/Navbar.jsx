@@ -18,23 +18,31 @@ export default function Navbar() {
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // ❌ USER REMOVED (keep commented)
-  // const [user, setUser] = useState(null);
+  // ⭐ Load logged-in user on first render
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // ❌ CART REMOVED (keep commented)
-  // const { totalItems } = useCart();
+  // ⭐ Dropdown toggle state
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // ❌ FIREBASE AUTH LISTENER REMOVED (keep commented)
-  /*
+  const toggleProfileMenu = () => {
+    setShowProfileMenu((prev) => !prev);
+  };
+
+  // Close profile dropdown when clicking outside
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsub();
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
-  */
 
-  // ================= SEARCH AUTO-SUGGEST =================
+  // =================== SEARCH AUTO-SUGGEST ===================
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -66,34 +74,27 @@ export default function Navbar() {
     setSearchTerm("");
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (inputRef.current && !inputRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        // nothing now
-      }
-    };
+  // ================= LOGOUT =================
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/login");
+  };
 
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  // ❌ LOGOUT (kept commented)
-  // const handleLogout = async () => {
-  //   await signOut(auth);
-  //   navigate("/login");
-  // };
+  // Profile avatar letter
+  const avatar = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
   return (
     <nav className="navbar">
       {/* LEFT — LOGO */}
-      <div className="nav-logo">
-        <Link to="/home">
-          <img src="/image.png" alt="OS" />
-        </Link>
+      <div
+        className="brand"
+        onClick={() => navigate("/home")}
+        style={{ cursor: "pointer" }}
+      >
+        <span className="brand-dot" /> OS
       </div>
 
       {/* SEARCH BAR */}
@@ -114,9 +115,7 @@ export default function Navbar() {
             {suggestions.map((prod) => (
               <li
                 key={prod.id}
-                onMouseDown={() =>
-                  navigate(`/product/${prod.id}`) // Go to product details
-                }
+                onMouseDown={() => navigate(`/product/${prod.id}`)}
               >
                 {prod.title}
               </li>
@@ -125,28 +124,55 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* RIGHT SECTION */}
+      {/* RIGHT SIDE */}
       <div className="nav-right">
-        {/* Login + Signup */}
-        <button
-          className="nav-btn nav-login-btn"
-          onClick={() => navigate("/login")}
-        >
-          Login
-        </button>
+        {/* IF NOT LOGGED IN */}
+        {!user && (
+          <>
+            <button
+              className="nav-btn nav-login-btn"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </button>
+            <button
+              className="nav-btn nav-signup-btn"
+              onClick={() => navigate("/signup")}
+            >
+              Signup
+            </button>
+          </>
+        )}
 
-        <button
-          className="nav-btn nav-signup-btn"
-          onClick={() => navigate("/signup")}
-        >
-          Signup
-        </button>
+        {/* IF LOGGED IN */}
+        {user && (
+          <div className="nav-profile" ref={profileRef}>
+            {/* Profile icon */}
+            <div
+              className="profile-avatar"
+              onClick={toggleProfileMenu}
+              style={{ cursor: "pointer" }}
+            >
+              {avatar}
+            </div>
 
-        {/* ❌ PROFILE UI REMOVED (keep commented)
-        <div className="nav-profile" ref={profileRef}> ... </div>
-        */}
+            {/* Dropdown */}
+            {showProfileMenu && (
+              <div className="profile-dropdown">
+                <div className="profile-email">{user.email}</div>
 
-        {/* ❌ CART REMOVED (keep commented)
+                <button
+                  className="logout-btn"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ❌ CART REMOVED (kept commented)
         <Link to="/cart" className="nav-cart">
           🛒 Cart
           {totalItems > 0 && (

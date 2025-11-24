@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./index.css";
-
 import api from "./services/api";
-
 // Layout
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -31,7 +29,8 @@ export default function App() {
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
 
-      setForm({ name: "", email: "", password: "" });
+      // setForm({ name: "", email: "", password: "" });
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/home"); // Redirect to home
     } catch (err) {
       alert(err.response?.data?.message || "Signup failed");
@@ -47,7 +46,8 @@ export default function App() {
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
 
-      setForm({ name: "", email: "", password: "" });
+      // setForm({ name: "", email: "", password: "" });
+         localStorage.setItem("user", JSON.stringify(res.data.user));
 
       navigate("/home"); // Redirect to home
     } catch (err) {
