@@ -9,7 +9,7 @@ import Footer from "./Footer";
 // Pages
 import Login from "./Login";
 import Signup from "./Signup";
-import StorePreview from "./StorePreview";
+import Home from "./StorePreview";
 import Products from "./Products";
 import ProductDetails from "./ProductDetails";
 
@@ -31,7 +31,7 @@ export default function App() {
 
       // setForm({ name: "", email: "", password: "" });
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      navigate("/home"); // Redirect to home
+      navigate("/"); // Redirect to home
     } catch (err) {
       alert(err.response?.data?.message || "Signup failed");
     }
@@ -49,7 +49,7 @@ export default function App() {
       // setForm({ name: "", email: "", password: "" });
          localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/home"); // Redirect to home
+      navigate("/"); // Redirect to home
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
@@ -87,11 +87,11 @@ export default function App() {
 
         {/* HOME (with Navbar + Footer) */}
         <Route
-          path="/home"
+          path="/"
           element={
             <>
               <Navbar />
-              <StorePreview />
+              <Home />
               <Footer />
             </>
           }
@@ -122,7 +122,7 @@ export default function App() {
         />
 
         {/* Unknown routes → HOME */}
-        <Route path="*" element={<Navigate to="/home" />} />
+        {/* <Route path="*" element={<Navigate to="/home" />} /> */}
       </Routes>
     </div>
   );
