@@ -10,40 +10,46 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
+/* ====================================
+   CORS FIX (FULLY WORKING FOR RENDER)
+   ==================================== */
+
 const allowedOrigins = [
   "https://caps-003.vercel.app",
   "http://localhost:5173"
 ];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: "GET,POST,PUT,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type, Authorization"
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+  })
+);
 
+// 🔥 This line is very important
 app.options("*", cors());
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Backend is running successfully.');
 });
 
-/* ===========================
+/* ====================================
    SIGNUP
-   =========================== */
+   ==================================== */
 app.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password)
       return res.status(400).json({ message: 'Missing required fields' });
-    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+    if (existingUser)
       return res.status(400).json({ message: 'User already exists' });
-    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -56,6 +62,7 @@ app.post('/signup', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
+
     const refreshToken = jwt.sign(
       { id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
@@ -66,7 +73,6 @@ app.post('/signup', async (req, res) => {
       data: { token: refreshToken, userId: user.id }
     });
 
-    // ✅ include safe user info in response
     res.status(201).json({
       accessToken,
       refreshToken,
@@ -84,28 +90,30 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-/* ===========================
+/* ====================================
    LOGIN
-   =========================== */
+   ==================================== */
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!email || !password)
       return res.status(400).json({ message: 'Missing email or password' });
-    }
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user)
+      return res.status(401).json({ message: 'Invalid credentials' });
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!valid)
+      return res.status(401).json({ message: 'Invalid credentials' });
 
     const accessToken = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
+
     const refreshToken = jwt.sign(
       { id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
@@ -116,7 +124,6 @@ app.post('/login', async (req, res) => {
       data: { token: refreshToken, userId: user.id }
     });
 
-    // ✅ include safe user info in response
     res.json({
       accessToken,
       refreshToken,
@@ -134,42 +141,44 @@ app.post('/login', async (req, res) => {
   }
 });
 
-/* ===========================
+/* ====================================
    LOGOUT
-   =========================== */
+   ==================================== */
 app.post('/logout', async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-      return res.status(400).json({ message: "Refresh token missing" });
-    }
-
-    // Remove refresh token from DB
     await prisma.refreshToken.deleteMany({
       where: { token: refreshToken }
     });
 
-    return res.json({ message: "Logged out successfully" });
+    res.json({ message: "Logged out successfully" });
   } catch (err) {
     console.error("Logout error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-/* ===========================
+/* ====================================
    REFRESH TOKEN
-   =========================== */
+   ==================================== */
 app.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(401).json({ message: 'No refresh token provided' });
 
-    const storedToken = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
-    if (!storedToken) return res.status(403).json({ message: 'Invalid refresh token' });
+    if (!refreshToken)
+      return res.status(401).json({ message: 'No refresh token provided' });
+
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken }
+    });
+
+    if (!storedToken)
+      return res.status(403).json({ message: 'Invalid refresh token' });
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) return res.status(403).json({ message: 'Refresh token expired' });
+      if (err)
+        return res.status(403).json({ message: 'Refresh token expired' });
 
       const newAccessToken = jwt.sign(
         { id: user.id },
@@ -185,88 +194,68 @@ app.post('/refresh', async (req, res) => {
   }
 });
 
-/* ===========================
-   AUTH MIDDLEWARE
-   =========================== */
+/* ====================================
+   🔥 AUTH MIDDLEWARE (FIXED OPTIONS)
+   ==================================== */
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  // Expect header: "Bearer <token>"
-  const token = authHeader && authHeader.split(' ')[1];
+  // Fix CORS preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
-  if (!token) return res.status(401).json({ message: 'No token provided' });
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token)
+    return res.status(401).json({ message: "No token provided" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
-    if (err) return res.status(403).json({ message: 'Invalid token' });
-    // payload = { id, iat, exp }
+    if (err)
+      return res.status(403).json({ message: "Invalid token" });
+
     req.user = { id: payload.id };
     next();
   });
 };
 
-/* ===========================
-   PROFILE UPDATE (Protected)
-   =========================== */
+/* ====================================
+   PROFILE UPDATE
+   ==================================== */
 app.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
     const { name, email, password } = req.body;
+    const userId = req.user.id;
 
     const updateData = {};
-
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
-    }
+    if (password) updateData.password = await bcrypt.hash(password, 10);
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      select: { id: true, name: true, email: true, createdAt: true, updatedAt: true }
     });
 
-    return res.json({
-      message: "Profile updated successfully",
-      user: updatedUser
-    });
+    res.json({ message: "Profile updated successfully", user: updatedUser });
   } catch (err) {
     console.error('Profile update error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-/* ===========================
-   GET USERS (Protected)
-   =========================== */
-app.get('/users', authenticateToken, async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true }
-    });
-    res.json(users);
-  } catch (err) {
-    console.error('Get users error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+/* ====================================
+   CART
+   ==================================== */
+
 app.post("/cart/add", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const { productId, title, price, thumbnail } = req.body;
 
-  let cart = await prisma.cart.findUnique({
-    where: { userId },
-  });
+  let cart = await prisma.cart.findUnique({ where: { userId } });
 
   if (!cart) {
-    cart = await prisma.cart.create({
-      data: { userId },
-    });
+    cart = await prisma.cart.create({ data: { userId } });
   }
 
   const existingItem = await prisma.cartItem.findFirst({
@@ -280,45 +269,37 @@ app.post("/cart/add", authenticateToken, async (req, res) => {
     });
   } else {
     await prisma.cartItem.create({
-      data: {
-        cartId: cart.id,
-        productId,
-        title,
-        price,
-        thumbnail,
-        quantity: 1,
-      }
+      data: { cartId: cart.id, productId, title, price, thumbnail, quantity: 1 }
     });
   }
 
   res.json({ message: "Added to cart" });
 });
-app.get("/cart", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
 
+app.get("/cart", authenticateToken, async (req, res) => {
   const cart = await prisma.cart.findUnique({
-    where: { userId },
+    where: { userId: req.user.id },
     include: { items: true }
   });
-
   res.json(cart ? cart.items : []);
 });
+
 app.delete("/cart/remove/:id", authenticateToken, async (req, res) => {
-  const id = Number(req.params.id);
-
-  await prisma.cartItem.delete({
-    where: { id }
-  });
-
+  await prisma.cartItem.delete({ where: { id: Number(req.params.id) } });
   res.json({ message: "Item removed" });
 });
+
 app.delete("/cart/clear", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
   await prisma.cartItem.deleteMany({
-    where: { cart: { userId } }
+    where: { cart: { userId: req.user.id } }
   });
   res.json({ message: "Cart cleared" });
 });
+
+/* ====================================
+   ORDERS
+   ==================================== */
+
 app.post("/orders/place", authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
@@ -340,30 +321,26 @@ app.post("/orders/place", authenticateToken, async (req, res) => {
       userId,
       total,
       items: {
-        create: cart.items.map((i) => ({
+        create: cart.items.map(i => ({
           productId: i.productId,
           title: i.title,
           price: i.price,
           quantity: i.quantity,
           thumbnail: i.thumbnail,
-        })),
-      },
+        }))
+      }
     },
     include: { items: true }
   });
 
-  // clear cart items only
-  await prisma.cartItem.deleteMany({
-    where: { cartId: cart.id }
-  });
+  await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
   res.json({ message: "Order placed!", order });
 });
-app.get("/orders", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
 
+app.get("/orders", authenticateToken, async (req, res) => {
   const orders = await prisma.order.findMany({
-    where: { userId },
+    where: { userId: req.user.id },
     include: { items: true },
     orderBy: { createdAt: "desc" }
   });
@@ -371,9 +348,9 @@ app.get("/orders", authenticateToken, async (req, res) => {
   res.json(orders);
 });
 
-/* ===========================
+/* ====================================
    START SERVER
-   =========================== */
+   ==================================== */
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
