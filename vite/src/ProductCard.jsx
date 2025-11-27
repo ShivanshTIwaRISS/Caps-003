@@ -15,8 +15,8 @@ export default function ProductCard({ product, onWishlistToggle }) {
     onWishlistToggle(product.id);
   };
 
-  // ⭐ Check if product exists in cart
-  const isInCart = cartItems.some((i) => i.id === product.id);
+  // ⭐ FIXED: Check using productId (backend format)
+  const isInCart = cartItems.some((i) => i.productId === product.id);
 
   /*
   const addToCart = (e) => {
@@ -41,7 +41,7 @@ export default function ProductCard({ product, onWishlistToggle }) {
 
     // ⭐ Add to cart normally
     addItemToCart({
-      id: product.id,
+      id: product.id,          // backend expects productId
       title: product.title,
       price: product.price,
       thumbnail: product.thumbnail,

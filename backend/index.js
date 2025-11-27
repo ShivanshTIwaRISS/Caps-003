@@ -255,6 +255,121 @@ app.get('/users', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+app.post("/cart/add", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { productId, title, price, thumbnail } = req.body;
+
+  let cart = await prisma.cart.findUnique({
+    where: { userId },
+  });
+
+  if (!cart) {
+    cart = await prisma.cart.create({
+      data: { userId },
+    });
+  }
+
+  const existingItem = await prisma.cartItem.findFirst({
+    where: { cartId: cart.id, productId }
+  });
+
+  if (existingItem) {
+    await prisma.cartItem.update({
+      where: { id: existingItem.id },
+      data: { quantity: existingItem.quantity + 1 }
+    });
+  } else {
+    await prisma.cartItem.create({
+      data: {
+        cartId: cart.id,
+        productId,
+        title,
+        price,
+        thumbnail,
+        quantity: 1,
+      }
+    });
+  }
+
+  res.json({ message: "Added to cart" });
+});
+app.get("/cart", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+    include: { items: true }
+  });
+
+  res.json(cart ? cart.items : []);
+});
+app.delete("/cart/remove/:id", authenticateToken, async (req, res) => {
+  const id = Number(req.params.id);
+
+  await prisma.cartItem.delete({
+    where: { id }
+  });
+
+  res.json({ message: "Item removed" });
+});
+app.delete("/cart/clear", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  await prisma.cartItem.deleteMany({
+    where: { cart: { userId } }
+  });
+  res.json({ message: "Cart cleared" });
+});
+app.post("/orders/place", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+    include: { items: true }
+  });
+
+  if (!cart || cart.items.length === 0)
+    return res.status(400).json({ message: "Cart empty" });
+
+  const total = cart.items.reduce(
+    (sum, i) => sum + i.price * i.quantity,
+    0
+  );
+
+  const order = await prisma.order.create({
+    data: {
+      userId,
+      total,
+      items: {
+        create: cart.items.map((i) => ({
+          productId: i.productId,
+          title: i.title,
+          price: i.price,
+          quantity: i.quantity,
+          thumbnail: i.thumbnail,
+        })),
+      },
+    },
+    include: { items: true }
+  });
+
+  // clear cart items only
+  await prisma.cartItem.deleteMany({
+    where: { cartId: cart.id }
+  });
+
+  res.json({ message: "Order placed!", order });
+});
+app.get("/orders", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  const orders = await prisma.order.findMany({
+    where: { userId },
+    include: { items: true },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(orders);
+});
 
 /* ===========================
    START SERVER

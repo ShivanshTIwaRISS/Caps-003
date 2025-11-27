@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-// import { auth } from "../../firebase";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -13,8 +12,11 @@ export default function ProductDetails() {
 
   const { addItemToCart, cartItems, clearCart } = useCart();
 
-  const isInCart = cartItems.some((i) => i.id === Number(id)); // ⭐ check if already in cart
-  const user = JSON.parse(localStorage.getItem("user"));       // ⭐ check login
+  // ⭐ FIX: backend stores "productId", not "id"
+  const isInCart = cartItems.some((i) => i.productId === Number(id));
+
+  const user = JSON.parse(localStorage.getItem("user")); // ⭐ check login
+  const token = localStorage.getItem("accessToken");     // ⭐ needed for backend sync
 
   useEffect(() => {
     fetch(`https://dummyjson.com/products/${id}`)
@@ -28,6 +30,24 @@ export default function ProductDetails() {
         setLoading(false);
       });
   }, [id]);
+
+  // ⭐ BACKEND add-to-cart helper
+  const syncToBackend = async () => {
+    if (!token) return;
+    await fetch("https://caps-003.onrender.com/cart/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        thumbnail: product.thumbnail,
+      }),
+    });
+  };
 
   if (loading)
     return <p className="pd-loading">Loading futuristic product...</p>;
@@ -77,22 +97,26 @@ export default function ProductDetails() {
             </button>
             ------------------------------------------------------------------ */}
 
-            {/* ⭐ ACTIVE BUTTON (Protected + Dynamic) */}
+            {/* ⭐ ACTIVE BUTTON (Protected + Dynamic + Backend Synced) */}
             {!isInCart ? (
               <button
                 className="pd-cart-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (!user) {
-                    navigate("/login");  // ⭐ redirect if not logged in
+                    navigate("/login"); // ⭐ redirect if not logged in
                     return;
                   }
 
+                  // Local cart update
                   addItemToCart({
                     id: product.id,
                     title: product.title,
                     price: product.price,
                     thumbnail: product.thumbnail,
                   });
+
+                  // Backend sync
+                  await syncToBackend();
                 }}
               >
                 Add to Cart
@@ -107,22 +131,27 @@ export default function ProductDetails() {
               </button>
             )}
 
-            {/* ⭐ BUY NOW (Protected) */}
+            {/* ⭐ BUY NOW (Protected + Backend Sync) */}
             <button
               className="pd-buy-btn"
-              onClick={() => {
+              onClick={async () => {
                 if (!user) {
-                  navigate("/login");   // ⭐ protect buy now
+                  navigate("/login"); // ⭐ protect buy now
                   return;
                 }
 
-                clearCart();
+                clearCart(); // Clear local cart first
+
                 addItemToCart({
                   id: product.id,
                   title: product.title,
                   price: product.price,
                   thumbnail: product.thumbnail,
                 });
+
+                // Backend sync
+                await syncToBackend();
+
                 navigate("/checkout");
               }}
             >

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import api from "./services/api"; // ⭐ your axios instance
 
 // ================= FIREBASE DISABLED FOR NOW =================
 // import { db, auth } from "../../firebase";
@@ -15,11 +16,11 @@ export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 TEMPORARY DUMMY ORDER DATA (since Firebase disabled)
+  // 🔥 TEMPORARY DUMMY ORDER DATA (used only if backend has no orders)
   const dummyOrders = [
     {
       id: "DUMMY-ORDER-001",
-      createdAt: { toDate: () => new Date() },
+      createdAt: new Date().toISOString(),
       total: 199,
       items: [
         {
@@ -38,7 +39,6 @@ export default function OrderHistory() {
     // ============================================================
     // 🚫 FIREBASE DISABLED — KEEPING THE CODE COMMENTED FOR FUTURE
     // ============================================================
-
     /*
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -65,11 +65,33 @@ export default function OrderHistory() {
     return () => unsubscribe();
     */
 
-    // ⭐ Temporary: simulate Firebase delay
-    setTimeout(() => {
-      setOrders(dummyOrders);
-      setLoading(false);
-    }, 800);
+    // ⭐ REAL BACKEND ORDER HISTORY FETCH
+    api
+      .get("/orders")
+      .then((res) => {
+        const data = res.data;
+
+        if (!data || data.length === 0) {
+          setOrders(dummyOrders); // fallback
+        } else {
+          // ⭐ Format matches your old Firebase-like UI
+          const formatted = data.map((order) => ({
+            id: order.id,
+            createdAt: order.createdAt,
+            total: order.total,
+            items: order.items,
+          }));
+
+          setOrders(formatted);
+        }
+
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log("Order fetch error:", err);
+        setOrders(dummyOrders);
+        setLoading(false);
+      });
   }, []);
 
   // ---------------- UI --------------------
@@ -89,17 +111,20 @@ export default function OrderHistory() {
             <div key={order.id} className="order-card">
               <div className="order-head">
                 <span>Order ID: {order.id}</span>
-                <span>{order.createdAt?.toDate().toLocaleString()}</span>
+                <span>
+                  {new Date(order.createdAt).toLocaleString()}
+                </span>
               </div>
 
               <div className="order-items">
-                {order.items.map((item, i) => (
-                  <div key={i} className="order-item">
+                {order.items.map((item, index) => (
+                  <div key={index} className="order-item">
                     <img
                       src={item.thumbnail}
                       alt={item.title}
                       className="order-item-img"
                     />
+
                     <div>
                       <p className="order-item-title">{item.title}</p>
                       <p className="order-item-qty">Qty: {item.quantity}</p>
@@ -109,9 +134,7 @@ export default function OrderHistory() {
                 ))}
               </div>
 
-              <div className="order-total">
-                Total: ₹{order.total}
-              </div>
+              <div className="order-total">Total: ₹{order.total}</div>
             </div>
           ))}
         </div>

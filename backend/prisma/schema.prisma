@@ -8,19 +8,62 @@ datasource db {
 }
 
 model User {
-  id            Int             @id @default(autoincrement())
-  email         String          @unique
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
   name          String
   password      String
   refreshTokens RefreshToken[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  carts         Cart[] // 👈 user ke carts
+  orders        Order[] // 👈 user ke orders
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model RefreshToken {
-  id        Int     @id @default(autoincrement())
-  token     String  @unique
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
   userId    Int
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+model Cart {
+  id     Int        @id @default(autoincrement())
+  userId Int        @unique // 👈 har user ka sirf 1 active cart
+  user   User       @relation(fields: [userId], references: [id])
+  items  CartItem[]
+}
+
+model CartItem {
+  id        Int    @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  title     String
+  price     Float
+  thumbnail String
+  quantity  Int    @default(1)
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  total     Float
+  createdAt DateTime    @default(now())
+  items     OrderItem[]
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  title     String
+  price     Float
+  quantity  Int
+  thumbnail String
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

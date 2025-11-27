@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { useCart } from "./CartContext"; 
-// import { auth, db } from "../../firebase";
-// import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useCart } from "./CartContext";
+import api from "./services/api"; // ⭐ use your axios instance
 
 export default function Checkout() {
-  // ⭐ Now using your REAL cart
   const { cartItems, totalPrice, clearCart } = useCart();
 
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -25,6 +23,8 @@ export default function Checkout() {
   const [upiId, setUpiId] = useState("");
   const [confirmCod, setConfirmCod] = useState(false);
 
+  const token = localStorage.getItem("accessToken");
+
   const handleChange = (e) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
   };
@@ -40,7 +40,7 @@ export default function Checkout() {
     (paymentMethod === "upi" && upiId) ||
     paymentMethod === "cod";
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!isAddressValid || !isPaymentValid) return;
 
     if (paymentMethod === "cod" && !confirmCod) {
@@ -64,9 +64,18 @@ export default function Checkout() {
     */
     // ---------------------------------------------------------------
 
-    clearCart();          // ⭐ Clear cart after placing order (active)
+    // ⭐ BACKEND ORDER API CALL
+    try {
+      const res = await api.post("/orders/place");
 
-    setOrderPlaced(true); // Show success page
+      console.log("ORDER PLACED:", res.data);
+
+      clearCart(); // ⭐ Clear cart locally
+      setOrderPlaced(true); // 🎉 Show success screen
+    } catch (err) {
+      console.error("❌ Order error:", err);
+      alert("Failed to place order. Try again.");
+    }
   };
 
   // ========== SUCCESS SCREEN ==========
