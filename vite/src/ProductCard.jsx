@@ -41,11 +41,12 @@ export default function ProductCard({ product, onWishlistToggle }) {
 
     // ⭐ Add to cart normally
     addItemToCart({
-      id: product.id,          // backend expects productId
-      title: product.title,
-      price: product.price,
-      thumbnail: product.thumbnail,
-    });
+  productId: product.id,
+  title: product.title,
+  price: product.price,
+  thumbnail: product.thumbnail,
+});
+
   };
 
   return (

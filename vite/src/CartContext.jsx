@@ -1,6 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from "react";
-import api from "./services/api";  // ⭐ using your axios instance
-import ENDPOINT from "./constants"; // ⭐ API base URL
+import api from "./services/api";  // axios instance
 
 const CartContext = createContext();
 export function useCart() {
@@ -29,11 +28,11 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
   /* ---------------------------------------------------
-     1️⃣ LOAD CART WHEN USER LOGS IN
+     1️⃣ LOAD CART FROM BACKEND 
   --------------------------------------------------- */
   const loadCart = async () => {
     try {
-      const res = await api.get("/cart"); // ⭐ auto token included
+      const res = await api.get("/cart"); // token auto included
       dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
       console.log("❌ Cart load failed:", err);
@@ -47,18 +46,18 @@ export function CartProvider({ children }) {
   }, []);
 
   /* ---------------------------------------------------
-     2️⃣ ADD ITEM
+     2️⃣ ADD ITEM (productId FIXED)
   --------------------------------------------------- */
   const addItemToCart = async (product) => {
     try {
       await api.post("/cart/add", {
-        productId: product.id,
+        productId: product.productId || product.id,   // 🔥 FIXED
         title: product.title,
         price: product.price,
         thumbnail: product.thumbnail,
       });
 
-      await loadCart(); // reload from backend
+      await loadCart();
     } catch (err) {
       console.log("❌ Add to cart failed:", err);
     }
@@ -89,7 +88,7 @@ export function CartProvider({ children }) {
   };
 
   /* ---------------------------------------------------
-     5️⃣ TOTALS
+     5️⃣ CALCULATE TOTALS
   --------------------------------------------------- */
   const totalItems = state.cartItems.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = state.cartItems.reduce(

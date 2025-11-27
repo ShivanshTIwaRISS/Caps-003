@@ -12,11 +12,11 @@ export default function ProductDetails() {
 
   const { addItemToCart, cartItems, clearCart } = useCart();
 
-  // ⭐ FIX: backend stores "productId", not "id"
+  // ⭐ FIX: backend & local cart use "productId"
   const isInCart = cartItems.some((i) => i.productId === Number(id));
 
-  const user = JSON.parse(localStorage.getItem("user")); // ⭐ check login
-  const token = localStorage.getItem("accessToken");     // ⭐ needed for backend sync
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("accessToken");
 
   useEffect(() => {
     fetch(`https://dummyjson.com/products/${id}`)
@@ -31,9 +31,10 @@ export default function ProductDetails() {
       });
   }, [id]);
 
-  // ⭐ BACKEND add-to-cart helper
+  /* ⭐ BACKEND add-to-cart helper */
   const syncToBackend = async () => {
     if (!token) return;
+
     await fetch("https://caps-003.onrender.com/cart/add", {
       method: "POST",
       headers: {
@@ -41,7 +42,7 @@ export default function ProductDetails() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        productId: product.id,
+        productId: product.id, // 🔥 FIXED KEY
         title: product.title,
         price: product.price,
         thumbnail: product.thumbnail,
@@ -80,7 +81,7 @@ export default function ProductDetails() {
 
           <div className="pd-buttons">
 
-            {/* -------------------- ORIGINAL COMMENTED BLOCK --------------------
+            {/* -------------------- ORIGINAL COMMENTED BLOCK (KEEPING SAFE) --------------------
               
             <button
               onClick={() =>
@@ -107,9 +108,9 @@ export default function ProductDetails() {
                     return;
                   }
 
-                  // Local cart update
+                  // Local cart update with correct productId
                   addItemToCart({
-                    id: product.id,
+                    productId: product.id,
                     title: product.title,
                     price: product.price,
                     thumbnail: product.thumbnail,
@@ -136,20 +137,19 @@ export default function ProductDetails() {
               className="pd-buy-btn"
               onClick={async () => {
                 if (!user) {
-                  navigate("/login"); // ⭐ protect buy now
+                  navigate("/login");
                   return;
                 }
 
-                clearCart(); // Clear local cart first
+                clearCart(); // Clear local cart
 
                 addItemToCart({
-                  id: product.id,
+                  productId: product.id,
                   title: product.title,
                   price: product.price,
                   thumbnail: product.thumbnail,
                 });
 
-                // Backend sync
                 await syncToBackend();
 
                 navigate("/checkout");
