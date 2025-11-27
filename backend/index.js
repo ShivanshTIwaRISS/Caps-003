@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import 'dotenv/config';
+import "./pinger.js";
 
 dotenv.config();
 const prisma = new PrismaClient();
