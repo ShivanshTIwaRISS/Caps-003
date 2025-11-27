@@ -5,7 +5,7 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import "dotenv/config";
-import "./pinger.js"; // keep this for Render ping
+
 
 dotenv.config();
 const prisma = new PrismaClient();
