@@ -12,6 +12,7 @@ import Signup from "./Signup";
 import Home from "./StorePreview";
 import Products from "./Products";
 import ProductDetails from "./ProductDetails";
+import GenericInfoPage from "./GenericInfoPage"; 
 
 export default function App() {
   const navigate = useNavigate();
@@ -116,6 +117,17 @@ export default function App() {
             <>
               <Navbar />
               <ProductDetails />
+              <Footer />
+            </>
+          }
+        />
+         {/* GENERIC INFORMATION PAGES (About, Careers, Help, etc.) */}
+        <Route
+          path="/info/:page"
+          element={
+            <>
+              <Navbar />
+              <GenericInfoPage />
               <Footer />
             </>
           }

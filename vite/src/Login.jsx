@@ -4,8 +4,6 @@ import Navbar from "./Navbar";
 
 export default function Login({ form, handleChange, handleLogin }) {
   const navigate = useNavigate();
-
-  // ✅ If already logged in → redirect to home
   useEffect(() => {
     const u = localStorage.getItem("user");
     if (u) navigate("/home");

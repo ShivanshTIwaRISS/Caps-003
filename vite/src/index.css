@@ -1560,3 +1560,71 @@ body{
   0% { opacity: 0; transform: translateY(25px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+/* =====================================================
+   GENERIC INFO PAGE — MATCHED WITH OS NEON THEME
+=====================================================*/
+
+.info-page {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  animation: fadeIn 0.6s ease;
+}
+
+.info-card {
+  background: var(--panel-2);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  border: 1px solid #1b2345;
+  box-shadow: 0 15px 35px #0009, inset 0 0 0 1px #ffffff08;
+  animation: float-soft 6s ease-in-out infinite;
+}
+
+.info-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  margin-bottom: 14px;
+
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.info-desc {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 26px;
+}
+
+/* Back Button */
+.info-back-btn {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+  color: #0b1020;
+
+  box-shadow: 0 10px 22px #20e3b244, 0 4px 10px #7c6cff33;
+  transition: 0.25s ease;
+}
+
+.info-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px #20e3b255;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-soft {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
