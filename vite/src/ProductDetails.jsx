@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-// import { useCart } from "../../context/CartContext";
+import { useCart } from "./CartContext";
 // import { auth } from "../../firebase";
 
 export default function ProductDetails() {
@@ -11,7 +11,10 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // const { addItemToCart, clearCart } = useCart();
+  const { addItemToCart, cartItems, clearCart } = useCart();
+
+  const isInCart = cartItems.some((i) => i.id === Number(id)); // ⭐ check if already in cart
+  const user = JSON.parse(localStorage.getItem("user"));       // ⭐ check login
 
   useEffect(() => {
     fetch(`https://dummyjson.com/products/${id}`)
@@ -38,18 +41,14 @@ export default function ProductDetails() {
       </Link>
 
       <div className="pd-grid">
-        {/* LEFT: PRODUCT IMAGE */}
         <div className="pd-image-box">
           <img src={product.thumbnail} alt={product.title} />
         </div>
 
-        {/* RIGHT: PRODUCT INFO */}
         <div className="pd-info">
           <h1 className="pd-title">{product.title}</h1>
-
           <p className="pd-price">${product.price}</p>
           <p className="pd-rating">⭐ {product.rating} / 5</p>
-
           <p className="pd-desc">{product.description}</p>
 
           <div className="pd-meta">
@@ -60,7 +59,10 @@ export default function ProductDetails() {
           </div>
 
           <div className="pd-buttons">
-            {/* <button
+
+            {/* -------------------- ORIGINAL COMMENTED BLOCK --------------------
+              
+            <button
               onClick={() =>
                 addItemToCart({
                   id: product.id,
@@ -73,28 +75,60 @@ export default function ProductDetails() {
             >
               Add to Cart
             </button>
+            ------------------------------------------------------------------ */}
 
+            {/* ⭐ ACTIVE BUTTON (Protected + Dynamic) */}
+            {!isInCart ? (
+              <button
+                className="pd-cart-btn"
+                onClick={() => {
+                  if (!user) {
+                    navigate("/login");  // ⭐ redirect if not logged in
+                    return;
+                  }
+
+                  addItemToCart({
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    thumbnail: product.thumbnail,
+                  });
+                }}
+              >
+                Add to Cart
+              </button>
+            ) : (
+              <button
+                className="pd-cart-btn"
+                onClick={() => navigate("/cart")}
+                style={{ background: "var(--brand-2)", color: "#000" }}
+              >
+                Go to Cart
+              </button>
+            )}
+
+            {/* ⭐ BUY NOW (Protected) */}
             <button
+              className="pd-buy-btn"
               onClick={() => {
-                const user = auth.currentUser;
-                if (!user) return navigate("/login");
+                if (!user) {
+                  navigate("/login");   // ⭐ protect buy now
+                  return;
+                }
 
                 clearCart();
-                addItemToCart(product);
+                addItemToCart({
+                  id: product.id,
+                  title: product.title,
+                  price: product.price,
+                  thumbnail: product.thumbnail,
+                });
                 navigate("/checkout");
               }}
-              className="pd-buy-btn"
             >
               Buy Now
-            </button> */}
-
-            <button className="pd-cart-btn">
-              Add to Cart
             </button>
 
-            <button className="pd-buy-btn">
-              Buy Now
-            </button>
           </div>
         </div>
       </div>

@@ -1,17 +1,22 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-// import { useCart } from "../../context/CartContext";
+import { useCart } from "./CartContext"; // ✅ enable cart context
 
 export default function ProductCard({ product, onWishlistToggle }) {
   const navigate = useNavigate();
+  const { addItemToCart, cartItems } = useCart();
 
-  // ✅ FIXED: Route corrected → /product/:id
+  const user = JSON.parse(localStorage.getItem("user"));  // ⭐ check login
+
   const openProduct = () => navigate(`/product/${product.id}`);
 
   const toggleWishlist = (e) => {
     e.stopPropagation();
     onWishlistToggle(product.id);
   };
+
+  // ⭐ Check if product exists in cart
+  const isInCart = cartItems.some((i) => i.id === product.id);
 
   /*
   const addToCart = (e) => {
@@ -24,6 +29,24 @@ export default function ProductCard({ product, onWishlistToggle }) {
     });
   };
   */
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+
+    // ⭐ If NOT logged in → redirect to login
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    // ⭐ Add to cart normally
+    addItemToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      thumbnail: product.thumbnail,
+    });
+  };
 
   return (
     <div className="product-card" onClick={openProduct}>
@@ -46,7 +69,7 @@ export default function ProductCard({ product, onWishlistToggle }) {
           )}
         </div>
 
-        <p className="product-price">₹{product.price * 10}</p>
+        <p className="product-price">₹{product.price}</p>
 
         <p className="product-stock">In Stock</p>
 
@@ -54,11 +77,30 @@ export default function ProductCard({ product, onWishlistToggle }) {
           Delivery by <strong>Tuesday, June 18</strong>
         </p>
 
-        {/*
-        <button className="product-cart-btn" onClick={addToCart}>
-          Add to Cart
-        </button>
-        */}
+        {/* ⭐ Dynamic Cart Button with Login Protection */}
+        {!isInCart ? (
+          <button
+            className="product-cart-btn"
+            onClick={handleAddToCart}
+          >
+            Add to Cart
+          </button>
+        ) : (
+          <button
+            className="product-cart-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/cart");
+            }}
+            style={{
+              background: "var(--brand-2)",
+              color: "#000",
+              fontWeight: "700",
+            }}
+          >
+            Go to Cart
+          </button>
+        )}
       </div>
     </div>
   );

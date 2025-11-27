@@ -13,6 +13,12 @@ import Home from "./StorePreview";
 import Products from "./Products";
 import ProductDetails from "./ProductDetails";
 import GenericInfoPage from "./GenericInfoPage"; 
+import Checkout from "./Checkout";
+import Cart from "./Cart";
+import OrderHistory from "./OrderHistory";
+import ProtectedRoute from "./ProtectedRoute";
+
+
 
 export default function App() {
   const navigate = useNavigate();
@@ -132,6 +138,44 @@ export default function App() {
             </>
           }
         />
+        {/* CART (Protected) */}
+<Route
+  path="/cart"
+  element={
+    <ProtectedRoute>
+      <Navbar />
+      <Cart />
+      <Footer />
+    </ProtectedRoute>
+  }
+/>
+
+{/* CHECKOUT (Protected) */}
+<Route
+  path="/checkout"
+  element={
+    <ProtectedRoute>
+      <Navbar />
+      <Checkout />
+      <Footer />
+    </ProtectedRoute>
+  }
+/>
+
+{/* ORDERS (Protected) */}
+<Route
+  path="/orders"
+  element={
+    <ProtectedRoute>
+      <Navbar />
+      <OrderHistory />
+      <Footer />
+    </ProtectedRoute>
+  }
+/>
+
+
+
 
         {/* Unknown routes → HOME */}
         <Route path="*" element={<Navigate to="/" />} />

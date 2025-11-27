@@ -124,63 +124,78 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="nav-right">
-        {/* IF NOT LOGGED IN */}
-        {!user && (
-          <>
-            <button
-              className="nav-btn nav-login-btn"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </button>
-            <button
-              className="nav-btn nav-signup-btn"
-              onClick={() => navigate("/signup")}
-            >
-              Signup
-            </button>
-          </>
-        )}
+     <div className="nav-right">
 
-        {/* IF LOGGED IN */}
-        {user && (
-          <div className="nav-profile" ref={profileRef}>
-            {/* Profile icon */}
-            <div
-              className="profile-avatar"
-              onClick={toggleProfileMenu}
-              style={{ cursor: "pointer" }}
-            >
-              {avatar}
-            </div>
-
-            {/* Dropdown */}
-            {showProfileMenu && (
-              <div className="profile-dropdown">
-                <div className="profile-email">{user.email}</div>
-
-                <button
-                  className="logout-btn"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ❌ CART REMOVED (kept commented)
-        <Link to="/cart" className="nav-cart">
-          🛒 Cart
-          {totalItems > 0 && (
-            <span className="nav-cart-badge">{totalItems}</span>
-          )}
-        </Link>
-        */}
+  {/* SHOW ONLY WHEN LOGGED IN */}
+  {user && (
+    <>
+      {/* ORDERS ICON */}
+      <div
+        className="nav-orders"
+        onClick={() => navigate("/orders")}
+        style={{ cursor: "pointer" }}
+      >
+        📦
       </div>
+
+      {/* CART ICON */}
+      <div
+        className="nav-cart"
+        onClick={() => navigate("/cart")}
+        style={{ cursor: "pointer" }}
+      >
+        🛒
+      </div>
+    </>
+  )}
+
+  {/* IF NOT LOGGED IN: SHOW LOGIN + SIGNUP */}
+  {!user && (
+    <>
+      <button
+        className="nav-btn nav-login-btn"
+        onClick={() => navigate("/login")}
+      >
+        Login
+      </button>
+      <button
+        className="nav-btn nav-signup-btn"
+        onClick={() => navigate("/signup")}
+      >
+        Signup
+      </button>
+    </>
+  )}
+
+  {/* PROFILE AVATAR (ONLY WHEN LOGGED IN) */}
+  {user && (
+    <div className="nav-profile" ref={profileRef}>
+      <div
+        className="profile-avatar"
+        onClick={toggleProfileMenu}
+        style={{ cursor: "pointer" }}
+      >
+        {avatar}
+      </div>
+
+      {showProfileMenu && (
+        <div className="profile-dropdown">
+          <div className="profile-email">{user.email}</div>
+
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  )}
+
+</div>
+
+
     </nav>
   );
 }
