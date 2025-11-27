@@ -1,18 +1,18 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import cors from 'cors';
-import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import 'dotenv/config';
-import "./pinger.js";
+import express from "express";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+import "dotenv/config";
+import "./pinger.js"; // keep this for Render ping
 
 dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
 /* ====================================
-   CORS FIX (FULLY WORKING FOR RENDER)
+   REAL CORS FIX FOR RENDER + VERCEL
    ==================================== */
 
 const allowedOrigins = [
@@ -20,37 +20,43 @@ const allowedOrigins = [
   "http://localhost:5173"
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
-  })
-);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-// 🔥 This line is very important
-app.options("*", cors());
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // IMPORTANT for preflight
+  }
+
+  next();
+});
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Backend is running successfully.');
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully.");
 });
 
 /* ====================================
    SIGNUP
    ==================================== */
-app.post('/signup', async (req, res) => {
+app.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password)
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({ message: "Missing required fields" });
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser)
-      return res.status(400).json({ message: 'User already exists' });
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing)
+      return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -58,16 +64,14 @@ app.post('/signup', async (req, res) => {
       data: { name, email, password: hashedPassword }
     });
 
-    const accessToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
+    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     const refreshToken = jwt.sign(
       { id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     await prisma.refreshToken.create({
@@ -82,43 +86,39 @@ app.post('/signup', async (req, res) => {
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
 /* ====================================
    LOGIN
    ==================================== */
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password)
-      return res.status(400).json({ message: 'Missing email or password' });
+      return res.status(400).json({ message: "Missing email or password" });
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user)
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid)
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!valid) return res.status(401).json({ message: "Invalid credentials" });
 
-    const accessToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
+    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     const refreshToken = jwt.sign(
       { id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     await prisma.refreshToken.create({
@@ -133,24 +133,24 @@ app.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
 /* ====================================
    LOGOUT
    ==================================== */
-app.post('/logout', async (req, res) => {
+app.post("/logout", async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     await prisma.refreshToken.deleteMany({
-      where: { token: refreshToken }
+      where: { token: refreshToken },
     });
 
     res.json({ message: "Logged out successfully" });
@@ -163,46 +163,42 @@ app.post('/logout', async (req, res) => {
 /* ====================================
    REFRESH TOKEN
    ==================================== */
-app.post('/refresh', async (req, res) => {
+app.post("/refresh", async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
     if (!refreshToken)
-      return res.status(401).json({ message: 'No refresh token provided' });
+      return res.status(401).json({ message: "No refresh token provided" });
 
-    const storedToken = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken }
+    const stored = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
     });
 
-    if (!storedToken)
-      return res.status(403).json({ message: 'Invalid refresh token' });
+    if (!stored)
+      return res.status(403).json({ message: "Invalid refresh token" });
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
       if (err)
-        return res.status(403).json({ message: 'Refresh token expired' });
+        return res.status(403).json({ message: "Refresh token expired" });
 
       const newAccessToken = jwt.sign(
         { id: user.id },
         process.env.JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: "15m" }
       );
 
       res.json({ accessToken: newAccessToken });
     });
   } catch (err) {
-    console.error('Refresh error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("Refresh error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
 /* ====================================
-   🔥 AUTH MIDDLEWARE (FIXED OPTIONS)
+   AUTH MIDDLEWARE
    ==================================== */
 const authenticateToken = (req, res, next) => {
-  // Fix CORS preflight
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+  if (req.method === "OPTIONS") return res.sendStatus(200);
 
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -218,32 +214,6 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
-/* ====================================
-   PROFILE UPDATE
-   ==================================== */
-app.put('/profile', authenticateToken, async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const userId = req.user.id;
-
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-    if (password) updateData.password = await bcrypt.hash(password, 10);
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: { id: true, name: true, email: true, createdAt: true, updatedAt: true }
-    });
-
-    res.json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (err) {
-    console.error('Profile update error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
 
 /* ====================================
    CART
@@ -282,6 +252,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
     where: { userId: req.user.id },
     include: { items: true }
   });
+
   res.json(cart ? cart.items : []);
 });
 
@@ -313,7 +284,7 @@ app.post("/orders/place", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Cart empty" });
 
   const total = cart.items.reduce(
-    (sum, i) => sum + i.price * i.quantity,
+    (sum, item) => sum + item.price * item.quantity,
     0
   );
 
@@ -322,16 +293,16 @@ app.post("/orders/place", authenticateToken, async (req, res) => {
       userId,
       total,
       items: {
-        create: cart.items.map(i => ({
+        create: cart.items.map((i) => ({
           productId: i.productId,
           title: i.title,
           price: i.price,
           quantity: i.quantity,
           thumbnail: i.thumbnail,
-        }))
-      }
+        })),
+      },
     },
-    include: { items: true }
+    include: { items: true },
   });
 
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -343,7 +314,7 @@ app.get("/orders", authenticateToken, async (req, res) => {
   const orders = await prisma.order.findMany({
     where: { userId: req.user.id },
     include: { items: true },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   res.json(orders);
