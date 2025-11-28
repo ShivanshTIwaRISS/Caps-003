@@ -223,6 +223,7 @@ app.post("/cart/add", authenticateToken, async (req, res) => {
   const { productId, title, price, thumbnail } = req.body;
 
   let cart = await prisma.cart.findUnique({ where: { userId } });
+  console.log(cart)
 
   if (!cart) {
     cart = await prisma.cart.create({ data: { userId } });
@@ -325,3 +326,5 @@ app.get("/orders", authenticateToken, async (req, res) => {
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
+
+
