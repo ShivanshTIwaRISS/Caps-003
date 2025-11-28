@@ -319,6 +319,14 @@ app.get("/orders", authenticateToken, async (req, res) => {
 
   res.json(orders);
 });
+app.get("/api/test", async (req, res) => {
+  try {
+    const carts = await prisma.cart.findMany();
+    res.json({ ok: true, carts });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
 
 /* ====================================
    START SERVER
