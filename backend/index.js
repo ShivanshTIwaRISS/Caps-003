@@ -322,6 +322,6 @@ app.get("/orders", authenticateToken, async (req, res) => {
 /* ====================================
    START SERVER
    ==================================== */
-app.listen(process.env.PORT || 8085, () => {
-  console.log(`Server running on port ${process.env.PORT || 8085}`);
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
