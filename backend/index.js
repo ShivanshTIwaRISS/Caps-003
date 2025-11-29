@@ -219,6 +219,8 @@ const authenticateToken = (req, res, next) => {
    ==================================== */
 
 app.post("/cart/add", authenticateToken, async (req, res) => {
+  try{
+
   const userId = req.user.id;
   const { productId, title, price, thumbnail } = req.body;
 
@@ -244,6 +246,10 @@ app.post("/cart/add", authenticateToken, async (req, res) => {
   }
 
   res.json({ message: "Added to cart" });
+} catch (err) {
+  console.error("Add to cart error:", err);
+  res.status(500).json({ message: "Server error", error: err.message });
+}
 });
 
 app.get("/cart", authenticateToken, async (req, res) => {
