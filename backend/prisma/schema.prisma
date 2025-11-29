@@ -29,7 +29,7 @@ model RefreshToken {
 
 model Cart {
   id     Int        @id @default(autoincrement())
-  userId Int        @unique // 👈 har user ka sirf 1 active cart
+  userId Int        @unique 
   user   User       @relation(fields: [userId], references: [id])
   items  CartItem[]
 }

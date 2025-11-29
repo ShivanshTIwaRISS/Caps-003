@@ -221,6 +221,7 @@ const authenticateToken = (req, res, next) => {
 app.post("/cart/add", authenticateToken, async (req, res) => {
   try{
 
+  console.log("Prisma Models:", Object.keys(prisma)); 
   const userId = req.user.id;
   const { productId, title, price, thumbnail } = req.body;
 
