@@ -61,7 +61,7 @@ export default function Footer() {
 
       {/* Bottom Branding */}
       <div className="neo-footer-bottom">
-        © {new Date().getFullYear()} OS Store — Crafted with ♥ in the Neon UI
+        © {new Date().getFullYear()} OS Store
       </div>
 
     </footer>
