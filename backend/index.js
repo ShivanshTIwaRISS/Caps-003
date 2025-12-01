@@ -257,6 +257,25 @@ app.get("/products", async (req, res) => {
   }
 });
 
+app.get("/products/suggest", async (req, res) => {
+  try {
+    const { search = "", limit = 5 } = req.query;
+
+    if (!search.trim()) return res.json([]);
+
+    const url = `https://dummyjson.com/products/search?q=${encodeURIComponent(
+      search
+    )}&limit=${limit}`;
+
+    const r = await fetch(url);
+    const data = await r.json();
+
+    res.json(data.products || []);
+  } catch (err) {
+    console.log("Suggest error:", err);
+    res.json([]);
+  }
+});
 
 /* ====================================
    CART

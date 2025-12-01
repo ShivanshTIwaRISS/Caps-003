@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
-// ❌ CART CONTEXT REMOVED (kept commented)
-/// import { useCart } from "../../context/CartContext";
-
-// ❌ FIREBASE REMOVED (kept commented)
-// import { onAuthStateChanged, signOut } from "firebase/auth";
-// import { auth } from "../../firebase";
+import api from "./services/api"; // ⭐ use axios instance
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -18,18 +11,14 @@ export default function Navbar() {
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // ⭐ Load logged-in user on first render
+  // ⭐ User state
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
 
-  // ⭐ Dropdown toggle state
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  const toggleProfileMenu = () => {
-    setShowProfileMenu((prev) => !prev);
-  };
+  const toggleProfileMenu = () => setShowProfileMenu((prev) => !prev);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -42,25 +31,29 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // =================== SEARCH AUTO-SUGGEST ===================
+  // =================== BACKEND SEARCH AUTO-SUGGEST ===================
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
       return;
     }
 
-    const delay = setTimeout(() => {
-      axios
-        .get(
-          `https://dummyjson.com/products/search?q=${encodeURIComponent(
-            searchTerm.trim()
-          )}&limit=5`
-        )
-        .then((res) => {
-          setSuggestions(res.data.products || []);
-          setShowDropdown(true);
+    const delay = setTimeout(async () => {
+      try {
+        const res = await api.get("/products", {
+          params: {
+            search: searchTerm.trim(),
+            page: 1,
+            limit: 5,
+          },
         });
-    }, 300);
+
+        setSuggestions(res.data.products || []);
+        setShowDropdown(true);
+      } catch (err) {
+        console.log("Suggest error:", err);
+      }
+    }, 250);
 
     return () => clearTimeout(delay);
   }, [searchTerm]);
@@ -83,7 +76,6 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  // Profile avatar letter
   const avatar = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
   return (
@@ -124,78 +116,63 @@ export default function Navbar() {
         )}
       </div>
 
-     <div className="nav-right">
+      {/* RIGHT SIDE */}
+      <div className="nav-right">
 
-  {/* SHOW ONLY WHEN LOGGED IN */}
-  {user && (
-    <>
-      {/* ORDERS ICON */}
-      <div
-        className="nav-orders"
-        onClick={() => navigate("/orders")}
-        style={{ cursor: "pointer" }}
-      >
-        📦
+        {user && (
+          <>
+            <div
+              className="nav-orders"
+              onClick={() => navigate("/orders")}
+              style={{ cursor: "pointer" }}
+            >
+              📦
+            </div>
+
+            <div
+              className="nav-cart"
+              onClick={() => navigate("/cart")}
+              style={{ cursor: "pointer" }}
+            >
+              🛒
+            </div>
+          </>
+        )}
+
+        {!user && (
+          <>
+            <button className="nav-btn nav-login-btn" onClick={() => navigate("/login")}>
+              Login
+            </button>
+            <button className="nav-btn nav-signup-btn" onClick={() => navigate("/signup")}>
+              Signup
+            </button>
+          </>
+        )}
+
+        {user && (
+          <div className="nav-profile" ref={profileRef}>
+            <div
+              className="profile-avatar"
+              onClick={toggleProfileMenu}
+              style={{ cursor: "pointer" }}
+            >
+              {avatar}
+            </div>
+
+            {showProfileMenu && (
+              <div className="profile-dropdown">
+                <div className="profile-email">{user.email}</div>
+
+                <button className="logout-btn" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
-
-      {/* CART ICON */}
-      <div
-        className="nav-cart"
-        onClick={() => navigate("/cart")}
-        style={{ cursor: "pointer" }}
-      >
-        🛒
-      </div>
-    </>
-  )}
-
-  {/* IF NOT LOGGED IN: SHOW LOGIN + SIGNUP */}
-  {!user && (
-    <>
-      <button
-        className="nav-btn nav-login-btn"
-        onClick={() => navigate("/login")}
-      >
-        Login
-      </button>
-      <button
-        className="nav-btn nav-signup-btn"
-        onClick={() => navigate("/signup")}
-      >
-        Signup
-      </button>
-    </>
-  )}
-
-  {/* PROFILE AVATAR (ONLY WHEN LOGGED IN) */}
-  {user && (
-    <div className="nav-profile" ref={profileRef}>
-      <div
-        className="profile-avatar"
-        onClick={toggleProfileMenu}
-        style={{ cursor: "pointer" }}
-      >
-        {avatar}
-      </div>
-
-      {showProfileMenu && (
-        <div className="profile-dropdown">
-          <div className="profile-email">{user.email}</div>
-
-          <button
-            className="logout-btn"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-      )}
-    </div>
-  )}
-
-</div>
-
-
     </nav>
   );
 }
