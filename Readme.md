@@ -1,196 +1,213 @@
-# 🛒 Caps-003 Backend (Node.js + Express + Prisma + JWT + MySQL)
+# 🛒 Caps-003 Backend  
+Node.js • Express • Prisma • MySQL • JWT • Render Deployment
 
-This is the backend for the **Caps-003** eCommerce application, built with:
+This backend powers the **Caps-003** eCommerce application.  
+Includes authentication, cart CRUD, order management, Prisma ORM, secure CORS, and JWT token-based authorization.
 
-- Node.js + Express  
+---
+
+# 🌐 Live URLs
+
+### ✔️ Frontend (Vercel)
+https://caps-003.vercel.app
+
+### ✔️ Backend (Render)
+https://caps-003.onrender.com
+
+---
+
+# 🗄 Database Hosting (AIVEN MySQL)
+
+This project uses **Aiven MySQL** as the cloud database provider.
+
+- Fully managed MySQL  
+- Remote connection via SSL  
+- Connection string stored in `.env`  
+- Prisma ORM handles migrations  
+
+### The `DATABASE_URL` in `.env` looks like:
+
+```
+mysql://USER:PASSWORD@HOST:PORT/DATABASE?ssl-mode=REQUIRED
+```
+
+⚠️ **Database URL must NEVER be committed to GitHub.**
+
+---
+
+# ⚙️ Technologies Used
+
+- Node.js  
+- Express.js  
 - Prisma ORM  
-- MySQL Database  
-- JWT Authentication (Access + Refresh Tokens)  
-- Secure CORS (for Render + Vercel deployment)  
-- Cart CRUD (Add, Read, Update, Delete)  
-- Order Management  
-- Deployed on Render  
+- **Aiven MySQL (Database)**  
+- JWT Authentication  
+- Bcrypt Password Hashing  
+- Render (Backend Hosting)  
+- Vercel (Frontend Hosting)  
+- CORS Protection  
 
 ---
 
-##  Features
+# 📦 Installation
 
-### Authentication
-- User Signup  
-- User Login  
-- Protected Routes using JWT  
-- Access Token (15 min)  
-- Refresh Token (7 days) + Storage in DB  
-- Logout + Refresh Token Deletion  
-- Refresh Access Tokens safely  
+## 1️⃣ Install dependencies
+```bash
+npm install
+```
 
----
+## 2️⃣ Generate Prisma client
+```bash
+npx prisma generate
+```
 
-### 🛒 Cart Features (Full CRUD)
-- Add items to cart  
-- Fetch cart items  
-- Update quantity (PUT) ✔  
-- Remove single item  
-- Clear cart completely  
+## 3️⃣ Apply migrations
+```bash
+npx prisma migrate deploy
+```
 
----
-
-### 📦 Orders
-- Create an order from cart  
-- Move cart items into order items  
-- Clear cart after checkout  
-- Fetch all orders of the user  
+## 4️⃣ Start server
+```bash
+npm start
+```
 
 ---
 
-## 🗂 Folder Structure
-
-backend/
-│── index.js # Main server file
-│── prisma/
-│ └── schema.prisma
-│── package.json
-│── .env
-
-yaml
-
-
----
-
-## ⚙️ Tech Used
-
-| Technology | Purpose |
-|-----------|----------|
-| **Express.js** | API server |
-| **Prisma ORM** | DB mapping (MySQL) |
-| **JWT** | Authentication |
-| **bcrypt** | Password hashing |
-| **CORS** | Vercel + Render safe CORS |
-| **MySQL** | Database |
-| **Render** | Backend hosting |
-
----
-
-## 🔧 Environment Variables (Required)
-
-Create a `.env` file:
+# 🔧 Environment Variables (`.env`)
 
 ```env
-DATABASE_URL="mysql://USER:PASSWORD@HOST:PORT/DATABASE"
+DATABASE_URL="mysql://USER:PASSWORD@AIVEN-HOST:PORT/DATABASE?ssl-mode=REQUIRED"
 JWT_SECRET="your-access-secret"
 REFRESH_TOKEN_SECRET="your-refresh-secret"
 PORT=5000
-📌 Install & Run
-1️⃣ Install Dependencies
-bash
+```
 
-npm install
-2️⃣ Generate Prisma Client
-bash
+---
 
-npx prisma generate
-3️⃣ Run Migrations
-bash
+# 🔥 Complete API Documentation
 
-npx prisma migrate deploy
-4️⃣ Start Server
-bash
+Below is the **full list of API endpoints** for Auth, Cart, and Orders.
 
-npm start
-🔒 Authentication Endpoints
-Signup
-POST /signup
+---
 
-json
+# 🟦 AUTH APIs
 
+---
+
+### ▶️ Signup  
+**POST** `/signup`  
+**Body:**
+```json
 {
-  "name": "John Doe",
+  "name": "John",
   "email": "john@gmail.com",
   "password": "123456"
 }
-Login
-POST /login
-Returns:
+```
 
-json
+---
 
+### ▶️ Login  
+**POST** `/login`
+
+**Body:**
+```json
 {
-  "accessToken": "...",
-  "refreshToken": "...",
-  "user": { ... }
+  "email": "john@gmail.com",
+  "password": "123456"
 }
-Refresh Token
-POST /refresh
+```
 
-json
+Returns accessToken + refreshToken.
 
-{ "refreshToken": "xxx" }
-Logout
-POST /logout
+---
 
-json
+### ▶️ Refresh Access Token  
+**POST** `/refresh`  
+**Body:**
+```json
+{ "refreshToken": "..." }
+```
 
-{ "refreshToken": "xxx" }
-🛒 Cart Routes (CRUD)
-✔ Get Cart Items
-GET /cart
+---
 
-✔ Add Item
-POST /cart/add
+### ▶️ Logout  
+**POST** `/logout`  
+**Body:**
+```json
+{ "refreshToken": "..." }
+```
 
-json
+---
 
+# 🟩 CART APIs (FULL CRUD)
+
+> All Cart routes require:  
+```
+Authorization: Bearer <accessToken>
+```
+
+---
+
+### ▶️ Get Cart Items  
+**GET** `/cart`
+
+---
+
+### ▶️ Add Item to Cart  
+**POST** `/cart/add`
+
+**Body:**
+```json
 {
-  "productId": 1,
+  "productId": 5,
   "title": "Laptop",
   "price": 49999,
   "thumbnail": "img-url"
 }
-✔ Update Cart Item (PUT)
-PUT /cart/update/:id
+```
 
-json
+---
 
+### ▶️ Update Cart Item (PUT)  
+**PUT** `/cart/update/:cartItemId`
+
+**Body:**
+```json
 {
   "quantity": 3
 }
-✔ Remove a Cart Item
-DELETE /cart/remove/:id
+```
 
-✔ Clear All Cart Items
-DELETE /cart/clear
+---
 
-📦 Orders
-✔ Place Order
-POST /orders/place
+### ▶️ Remove a Cart Item  
+**DELETE** `/cart/remove/:cartItemId`
 
-✔ Get All Orders
-GET /orders
+---
 
-🔐 Authentication Middleware
-All protected routes use:
+### ▶️ Clear Entire Cart  
+**DELETE** `/cart/clear`
 
-makefile
+---
 
-Authorization: Bearer <token>
-⚠️ CORS Setup (Render + Vercel Safe)
-js
+# 🟧 ORDER APIs
 
-const allowedOrigins = [
-  "https://caps-003.vercel.app",
-  "http://localhost:5173"
-];
+---
 
-cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) cb(null, true);
-    else cb(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-});
-🗄 Prisma Models (MySQL)
-prisma
+### ▶️ Place Order  
+**POST** `/orders/place`
 
+---
+
+### ▶️ Get All Orders  
+**GET** `/orders`
+
+---
+
+# 🗄 Prisma Schema (MySQL + AIVEN)
+
+```prisma
 model User {
   id            Int            @id @default(autoincrement())
   email         String         @unique
@@ -221,14 +238,38 @@ model CartItem {
 
   cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
 }
-🧪 Postman Testing Guide
-1. Login → get accessToken
-2. GET /cart → find cartItemId
-3. PUT /cart/update/:id → update quantity
-4. DELETE /cart/remove/:id
-5. POST /orders/place
+```
+
+---
+
+# 🌍 CORS Configuration (Render + Vercel Safe)
+
+```js
+const allowedOrigins = [
+  "https://caps-003.vercel.app",
+  "http://localhost:5173"
+];
+```
+
+---
+
+# 🧪 Postman Testing Flow
+
+1. Login → Get accessToken  
+2. Set header  
+```
+Authorization: Bearer <token>
+```
+3. Test all APIs:
+   - `/cart`
+   - `/cart/add`
+   - `/cart/update/:id`
+   - `/cart/remove/:id`
+   - `/orders/place`
+
+---
+
+# Developer  
+**Shivansh Tiwari**  
 
 
-Developer
-Shivansh Tiwari
-Backend + Full-Stack Developer
