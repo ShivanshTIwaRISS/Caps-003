@@ -5,7 +5,6 @@ import Navbar from "./Navbar";
 export default function Signup({ form, handleChange, handleSignup }) {
   const navigate = useNavigate();
 
-  // ✅ If already logged in → redirect to home
   useEffect(() => {
     const u = localStorage.getItem("user");
     if (u) navigate("/home");

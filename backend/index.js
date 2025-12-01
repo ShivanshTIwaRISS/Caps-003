@@ -216,6 +216,35 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+app.put("/update-profile", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email } = req.body;
+
+    // Check if email is taken by another user
+    const exists = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (exists && exists.id !== userId) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { name, email },
+    });
+
+    return res.json({ message: "Profile updated", user: updatedUser });
+  } catch (err) {
+    console.error("Profile update error:", err);
+    return res.status(500).json({ message: "Failed to update profile" });
+  }
+});
+
+
+
 
 app.get("/products", async (req, res) => {
   try {
@@ -380,12 +409,8 @@ app.delete("/cart/clear", authenticateToken, async (req, res) => {
   res.json({ message: "Cart cleared" });
 });
 
-/* ====================================
-   ORDERS
-   ==================================== */
-/* ====================================
-   BUY NOW ORDER (no cart needed)
-   ==================================== */
+/* ORDERS*/
+
 app.post("/orders/buy-now", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;

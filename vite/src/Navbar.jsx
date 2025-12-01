@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "./services/api"; // ⭐ use axios instance
+import api from "./services/api"; 
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -154,7 +154,8 @@ export default function Navbar() {
           <div className="nav-profile" ref={profileRef}>
             <div
               className="profile-avatar"
-              onClick={toggleProfileMenu}
+              onClick={() => navigate("/profile")}
+
               style={{ cursor: "pointer" }}
             >
               {avatar}
@@ -162,9 +163,25 @@ export default function Navbar() {
 
             {showProfileMenu && (
               <div className="profile-dropdown">
+
+                {/*  PROFILE BUTTON */}
+                <button
+                  className="profile-option"
+                  onClick={() => {
+                    navigate("/profile");
+                    setShowProfileMenu(false);
+                  }}
+                >
+                  View Profile
+                </button>
+
                 <div className="profile-email">{user.email}</div>
 
-                <button className="logout-btn" onClick={handleLogout}>
+                {/*  LOGOUT BUTTON */}
+                <button
+                  className="logout-btn"
+                  onClick={handleLogout}
+                >
                   Logout
                 </button>
               </div>

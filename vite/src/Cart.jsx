@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-// import { auth } from "../../firebase";
-// import { onAuthStateChanged } from "firebase/auth";
 
 export default function Cart() {
   const {
@@ -34,14 +32,14 @@ export default function Cart() {
   };
 
   /* ============================================
-     ⭐ BACKEND: Increase Quantity
+     BACKEND: Increase Quantity
   ============================================ */
   const handleIncrease = async (item) => {
     await updateItemQuantity(item.cartItemId, item.quantity + 1);
   };
 
   /* ============================================
-     ⭐ BACKEND: Decrease Quantity
+     BACKEND: Decrease Quantity
   ============================================ */
   const handleDecrease = async (item) => {
     if (item.quantity === 1) {
@@ -52,14 +50,14 @@ export default function Cart() {
   };
 
   /* ============================================
-     ⭐ BACKEND: Remove item fully
+     BACKEND: Remove item fully
   ============================================ */
   const handleRemove = async (cartItemId) => {
     await removeItemFromCart(cartItemId);
   };
 
   /* ============================================
-     ⭐ BACKEND: Clear Cart
+     BACKEND: Clear Cart
   ============================================ */
   const handleClear = async () => {
     await clearCart();

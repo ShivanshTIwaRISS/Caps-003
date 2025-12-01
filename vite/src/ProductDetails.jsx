@@ -33,7 +33,7 @@ export default function ProductDetails() {
       });
   }, [id]);
 
-  // ⭐ Sync add-to-cart with backend
+  // Sync add-to-cart with backend
   const syncToBackend = async () => {
     if (!token) return;
 
@@ -52,7 +52,7 @@ export default function ProductDetails() {
     });
   };
 
-  // ⭐ BUY NOW handler (does NOT touch cart)
+  // BUY NOW handler (does NOT touch cart)
   const handleBuyNow = (productObj) => {
     localStorage.setItem("buyNowProduct", JSON.stringify(productObj));
     navigate("/checkout"); // go to checkout in BUY NOW mode
@@ -77,7 +77,7 @@ export default function ProductDetails() {
         <div className="pd-info">
           <h1 className="pd-title">{product.title}</h1>
           <p className="pd-price">₹{product.price}</p>
-          <p className="pd-rating">⭐ {product.rating} / 5</p>
+          <p className="pd-rating"> {product.rating} / 5</p>
           <p className="pd-desc">{product.description}</p>
 
           <div className="pd-meta">
@@ -89,7 +89,7 @@ export default function ProductDetails() {
 
           <div className="pd-buttons">
 
-            {/* ⭐ Add to Cart */}
+            {/*  Add to Cart */}
             {!isInCart ? (
               <button
                 className="pd-cart-btn"
@@ -120,7 +120,7 @@ export default function ProductDetails() {
               </button>
             )}
 
-            {/* ⭐ BUY NOW (Option-C Safe Mode) */}
+            {/*  BUY NOW (Option-C Safe Mode) */}
             <button
               className="pd-buy-btn"
               onClick={() => {

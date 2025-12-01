@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from "react";
-import api from "./services/api"; // axios instance
+import api from "./services/api"; 
 
 const CartContext = createContext();
 export function useCart() {
@@ -34,10 +34,9 @@ export function CartProvider({ children }) {
     try {
       const res = await api.get("/cart");
 
-      // ⭐ Normalize cart item ID
       const normalized = res.data.map((item) => ({
         ...item,
-        cartItemId: item.id, // <--- THIS IS THE REAL CART ITEM ID
+        cartItemId: item.id, 
       }));
 
       dispatch({ type: "SET_CART", payload: normalized });
@@ -107,8 +106,7 @@ export function CartProvider({ children }) {
   };
 
   /* ---------------------------------------------------
-     6️⃣ TOTALS
-  --------------------------------------------------- */
+     6️⃣ TOTALS*/
   const totalItems = state.cartItems.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = state.cartItems.reduce(
     (sum, i) => sum + i.price * i.quantity,
@@ -122,7 +120,7 @@ export function CartProvider({ children }) {
         addItemToCart,
         removeItemFromCart,
         clearCart,
-        updateItemQuantity, // ⭐ added
+        updateItemQuantity, 
         totalItems,
         totalPrice,
         reloadCart: loadCart,

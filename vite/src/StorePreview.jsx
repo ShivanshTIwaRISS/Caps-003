@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ProductCard from "./ProductCard";
 import { Link } from "react-router-dom";
+import api from "./services/api";
+import ProductCard from "./ProductCard";
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -14,23 +14,29 @@ export default function Home() {
     "Smartphones",
     "Laptops",
     "Fragrances",
-    "Groceries"
+    "Groceries",
   ];
 
+  /* ==========================================
+      FETCH FEATURED BASED ON CATEGORY (BACKEND)
+     ========================================== */
   const fetchCategoryProducts = async () => {
     setLoading(true);
 
-    const apiUrl =
-      category === "All"
-        ? "https://dummyjson.com/products?limit=8"
-        : `https://dummyjson.com/products/category/${category.toLowerCase()}?limit=8`;
-
     try {
-      const res = await axios.get(apiUrl);
-      setFeatured(res.data.products);
-    } catch (e) {
-      console.error(e);
+      const res = await api.get("/products", {
+        params: {
+          page: 1,
+          limit: 8,
+          category: category === "All" ? undefined : category.toLowerCase(),
+        },
+      });
+
+      setFeatured(res.data.products || []);
+    } catch (err) {
+      console.error("Home category fetch error:", err);
     }
+
     setLoading(false);
   };
 
@@ -38,21 +44,30 @@ export default function Home() {
     fetchCategoryProducts();
   }, [category]);
 
+  /* ==========================================
+        TRENDING PRODUCTS (BACKEND)
+     ========================================== */
   useEffect(() => {
     (async () => {
       try {
-        const trend = await axios.get(
-          "https://dummyjson.com/products?sortBy=rating&order=desc&limit=6"
-        );
-        setTrending(trend.data.products);
-      } catch (e) {
-        console.error(e);
+        const res = await api.get("/products", {
+          params: {
+            page: 1,
+            limit: 6,
+            sort: "rating",
+          },
+        });
+
+        setTrending(res.data.products || []);
+      } catch (err) {
+        console.error("Home trending fetch error:", err);
       }
     })();
   }, []);
 
   return (
     <div className="store home-page">
+
       {/* ================= HERO ================= */}
       <section className="home-hero neo-hero">
         <div className="neo-hero-left">
@@ -66,13 +81,11 @@ export default function Home() {
           </p>
 
           <div className="hero-actions">
-            <Link to="/products" className="cta">
-              Explore Products
-            </Link>
-            <button className="pill">🔥 Today&apos;s Deals</button>
+            <Link to="/products" className="cta">Explore Products</Link>
+            <button className="pill">🔥 Today's Deals</button>
           </div>
 
-          {/* categories */}
+          {/* CATEGORY FILTERS */}
           <div className="categories home-categories">
             {categories.map((c) => (
               <button
@@ -88,7 +101,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Floating tiles grid */}
+        {/* Floating tiles section */}
         <div className="neo-hero-right">
           <div
             className="neo-tile neo-tile--main"
@@ -135,17 +148,14 @@ export default function Home() {
         </div>
       </section>
 
-      
       {/* ================= FEATURED ================= */}
       <section className="home-section">
         <header className="home-section-head">
           <div>
-            <p className="home-tagline">Based on what&apos;s trending</p>
+            <p className="home-tagline">Based on what's trending</p>
             <h2 className="home-section-title">Featured Picks For You</h2>
           </div>
-          <Link to="/products" className="linklike">
-            View all →
-          </Link>
+          <Link to="/products" className="linklike">View all →</Link>
         </header>
 
         {loading ? (
@@ -153,11 +163,7 @@ export default function Home() {
         ) : (
           <div className="products">
             {featured.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onWishlistToggle={() => {}}
-              />
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         )}
@@ -174,42 +180,12 @@ export default function Home() {
 
         <div className="products">
           {trending.map((p) => (
-            <ProductCard key={p.id} product={p} onWishlistToggle={() => {}} />
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>
 
-      {/* ================= WIDGETS ================= */}
-      <section className="home-widgets">
-        <div className="auth-pane widget-card">
-          <h3>👤 People You May Like</h3>
-          <ul className="widget-chips">
-            <li>Rohit Sharma</li>
-            <li>Ana Gomez</li>
-            <li>Marcus Lee</li>
-            <li>Kaira Kapoor</li>
-          </ul>
-        </div>
-
-        <div className="auth-pane widget-card">
-          <h3>🎧 Now Playing</h3>
-          <p className="widget-sub">“Heat Waves” — Glass Animals</p>
-          <div className="bars">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-
-        <div className="auth-pane widget-card">
-          <h3>🌤 Weather</h3>
-          <p className="widget-temp">28°C</p>
-          <p className="widget-sub">New Delhi · Clear sky</p>
-        </div>
-      </section>
-{/* ================= METRICS ================= */}
+      {/* ================= METRICS ================= */}
       <section className="home-strip">
         <div className="home-metric">
           <span className="metric-label">Products</span>

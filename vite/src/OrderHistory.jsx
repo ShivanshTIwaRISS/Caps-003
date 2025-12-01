@@ -1,22 +1,11 @@
 import React, { useEffect, useState } from "react";
-import api from "./services/api"; // ⭐ your axios instance
-
-// ================= FIREBASE DISABLED FOR NOW =================
-// import { db, auth } from "../../firebase";
-// import {
-//   collection,
-//   query,
-//   where,
-//   orderBy,
-//   onSnapshot,
-// } from "firebase/firestore";
-// import { onAuthStateChanged } from "firebase/auth";
+import api from "./services/api"; 
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 TEMPORARY DUMMY ORDER DATA (used only if backend has no orders)
+  // TEMPORARY DUMMY ORDER DATA (used only if backend has no orders)
   const dummyOrders = [
     {
       id: "DUMMY-ORDER-001",
@@ -36,36 +25,8 @@ export default function OrderHistory() {
   useEffect(() => {
     setLoading(true);
 
-    // ============================================================
-    // 🚫 FIREBASE DISABLED — KEEPING THE CODE COMMENTED FOR FUTURE
-    // ============================================================
-    /*
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        setOrders([]);
-        setLoading(false);
-        return;
-      }
-
-      const sortedQuery = query(
-        collection(db, "orders"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
-      );
-
-      const unsubOrders = onSnapshot(sortedQuery, (snap) => {
-        let list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setOrders(list);
-        setLoading(false);
-      });
-
-      return () => unsubOrders();
-    });
-
-    return () => unsubscribe();
-    */
-
-    // ⭐ REAL BACKEND ORDER HISTORY FETCH
+    
+    //  BACKEND ORDER HISTORY FETCH
     api
       .get("/orders")
       .then((res) => {
@@ -74,7 +35,7 @@ export default function OrderHistory() {
         if (!data || data.length === 0) {
           setOrders(dummyOrders); // fallback
         } else {
-          // ⭐ Format matches your old Firebase-like UI
+          // Format matches your old Firebase-like UI
           const formatted = data.map((order) => ({
             id: order.id,
             createdAt: order.createdAt,

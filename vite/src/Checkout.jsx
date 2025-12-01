@@ -7,7 +7,7 @@ export default function Checkout() {
 
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const [mode, setMode] = useState("cart"); // ⭐ cart OR buyNow
+  const [mode, setMode] = useState("cart"); 
 
   const [buyNowProduct, setBuyNowProduct] = useState(null);
 

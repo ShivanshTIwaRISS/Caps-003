@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
 
   const openProduct = () => navigate(`/product/${product.id}`);
 
-  // ⭐ Check if item already exists in cart
+  // Check if item already exists in cart
   const isInCart = cartItems.some((i) => i.productId === product.id);
 
   const handleAddToCart = (e) => {
@@ -40,7 +40,7 @@ export default function ProductCard({ product }) {
         <h3>{product.title}</h3>
 
         <div className="product-rating">
-          ⭐ {product.rating} / 5
+          {product.rating} / 5
           {product.rating >= 4.5 && (
             <span className="product-badge">Top Rated</span>
           )}
@@ -54,7 +54,7 @@ export default function ProductCard({ product }) {
           Delivery by <strong>Tuesday, June 18</strong>
         </p>
 
-        {/* ⭐ Cart Button */}
+        {/* Cart Button */}
         {!isInCart ? (
           <button className="product-cart-btn" onClick={handleAddToCart}>
             Add to Cart

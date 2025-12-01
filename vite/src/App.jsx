@@ -17,6 +17,8 @@ import Checkout from "./Checkout";
 import Cart from "./Cart";
 import OrderHistory from "./OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
+import Profile from "./Profile";
+
 
 
 
@@ -36,7 +38,6 @@ export default function App() {
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
 
-      // setForm({ name: "", email: "", password: "" });
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/"); // Redirect to home
     } catch (err) {
@@ -52,8 +53,6 @@ export default function App() {
 
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
-
-      // setForm({ name: "", email: "", password: "" });
          localStorage.setItem("user", JSON.stringify(res.data.user));
 
       navigate("/"); // Redirect to home
@@ -65,10 +64,6 @@ export default function App() {
   return (
     <div className="os-root">
       <Routes>
-        {/* Default → HOME (not login anymore) */}
-        {/* <Route path="/" /> */}
-
-        {/* LOGIN */}
         <Route
           path="/login"
           element={
@@ -127,7 +122,6 @@ export default function App() {
             </>
           }
         />
-         {/* GENERIC INFORMATION PAGES (About, Careers, Help, etc.) */}
         <Route
           path="/info/:page"
           element={
@@ -138,6 +132,18 @@ export default function App() {
             </>
           }
         />
+        {/* PROFILE PAGE (Protected) */}
+<Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <Navbar />
+      <Profile />
+      <Footer />
+    </ProtectedRoute>
+  }
+/>
+
         {/* CART (Protected) */}
 <Route
   path="/cart"

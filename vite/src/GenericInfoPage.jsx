@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import "./index.css"; // use global theme
+import "./index.css"; 
 
 export default function GenericInfoPage() {
   const { page } = useParams();
