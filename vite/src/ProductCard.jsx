@@ -1,52 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "./CartContext"; // ✅ enable cart context
+import { useCart } from "./CartContext";
 
-export default function ProductCard({ product, onWishlistToggle }) {
+export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const { addItemToCart, cartItems } = useCart();
 
-  const user = JSON.parse(localStorage.getItem("user"));  // ⭐ check login
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const openProduct = () => navigate(`/product/${product.id}`);
 
-  const toggleWishlist = (e) => {
-    e.stopPropagation();
-    onWishlistToggle(product.id);
-  };
-
-  // ⭐ FIXED: Check using productId (backend format)
+  // ⭐ Check if item already exists in cart
   const isInCart = cartItems.some((i) => i.productId === product.id);
-
-  /*
-  const addToCart = (e) => {
-    e.stopPropagation();
-    addItemToCart({
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      thumbnail: product.thumbnail,
-    });
-  };
-  */
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
 
-    // ⭐ If NOT logged in → redirect to login
     if (!user) {
       navigate("/login");
       return;
     }
 
-    // ⭐ Add to cart normally
     addItemToCart({
-  productId: product.id,
-  title: product.title,
-  price: product.price,
-  thumbnail: product.thumbnail,
-});
-
+      productId: product.id,
+      title: product.title,
+      price: product.price,
+      thumbnail: product.thumbnail,
+    });
   };
 
   return (
@@ -54,11 +34,7 @@ export default function ProductCard({ product, onWishlistToggle }) {
       <div
         className="product-img"
         style={{ backgroundImage: `url(${product.thumbnail})` }}
-      >
-        <button className="product-wishlist" onClick={toggleWishlist}>
-          {product.isInWishlist ? "💖" : "🤍"}
-        </button>
-      </div>
+      ></div>
 
       <div className="product-info">
         <h3>{product.title}</h3>
@@ -78,12 +54,9 @@ export default function ProductCard({ product, onWishlistToggle }) {
           Delivery by <strong>Tuesday, June 18</strong>
         </p>
 
-        {/* ⭐ Dynamic Cart Button with Login Protection */}
+        {/* ⭐ Cart Button */}
         {!isInCart ? (
-          <button
-            className="product-cart-btn"
-            onClick={handleAddToCart}
-          >
+          <button className="product-cart-btn" onClick={handleAddToCart}>
             Add to Cart
           </button>
         ) : (

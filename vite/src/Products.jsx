@@ -1,98 +1,57 @@
-import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import api from "./services/api";
 import ProductCard from "./ProductCard";
 
 export default function Products() {
   const location = useLocation();
 
+  // STATES
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
 
-  // ❌ REMOVED LOCALSTORAGE — wishlist now in-memory only
-  const [wishlist, setWishlist] = useState([]);
-
   const [page, setPage] = useState(1);
-  const [sortKey, setSortKey] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+
   const [category, setCategory] = useState("all");
   const [ratingFilter, setRatingFilter] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
+  const [sortKey, setSortKey] = useState("");
 
-  const [totalPages, setTotalPages] = useState(1);
-  const PRODUCTS_PER_PAGE = 20;
-
-  // -------------------------------------
-  // Extract search query
-  // -------------------------------------
+  // Extract ?search=
   useEffect(() => {
     const q = new URLSearchParams(location.search).get("search") || "";
     setSearchTerm(q);
   }, [location.search]);
 
-  // -------------------------------------
-  // Fetch products
-  // -------------------------------------
-  const fetchProducts = useCallback(() => {
-    let url = `https://dummyjson.com/products?limit=${PRODUCTS_PER_PAGE}&skip=${
-      (page - 1) * PRODUCTS_PER_PAGE
-    }`;
+  // Fetch from backend
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get("/products", {
+        params: {
+          page,
+          limit: 20,
+          search: searchTerm,
+          category,
+          rating: ratingFilter,
+          price: priceFilter,
+          sort: sortKey,
+        },
+      });
 
-    if (searchTerm.trim()) {
-      url = `https://dummyjson.com/products/search?q=${encodeURIComponent(
-        searchTerm
-      )}&limit=${PRODUCTS_PER_PAGE}&skip=${
-        (page - 1) * PRODUCTS_PER_PAGE
-      }`;
+      setProducts(res.data.products || []);
+      setTotalPages(res.data.totalPages || 1);
+
+    } catch (err) {
+      console.log("❌ Products load failed:", err);
+      setProducts([]);
+      setTotalPages(1);
     }
-
-    if (category !== "all") {
-      url = `https://dummyjson.com/products/category/${category}`;
-    }
-
-    axios.get(url).then((res) => {
-      let items = res.data.products || [];
-
-      // Rating filter
-      if (ratingFilter) {
-        items = items.filter((p) => p.rating >= Number(ratingFilter));
-      }
-
-      // Price filter
-      if (priceFilter === "low") items.sort((a, b) => a.price - b.price);
-      if (priceFilter === "high") items.sort((a, b) => b.price - a.price);
-
-      // Sort options
-      if (sortKey === "price") items.sort((a, b) => a.price - b.price);
-      if (sortKey === "rating") items.sort((a, b) => b.rating - a.rating);
-
-      // APPLY wishlist mapping
-      const updated = items.map((product) => ({
-        ...product,
-        isInWishlist: wishlist.includes(product.id),
-      }));
-
-      setProducts(updated);
-
-      const total = res.data.total || items.length;
-      setTotalPages(Math.ceil(total / PRODUCTS_PER_PAGE));
-    });
-  }, [page, searchTerm, sortKey, category, ratingFilter, priceFilter, wishlist]);
+  };
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
-
-  // -------------------------------------
-  // Wishlist toggle (IN-MEMORY ONLY)
-  // -------------------------------------
-  const handleWishlistToggle = (id) => {
-    setWishlist((prev) => {
-      let updated;
-      if (prev.includes(id)) updated = prev.filter((x) => x !== id);
-      else updated = [...prev, id];
-      return updated; // ❌ NO LOCALSTORAGE ANYMORE
-    });
-  };
+  }, [page, searchTerm, category, ratingFilter, priceFilter, sortKey]);
 
   return (
     <div className="products-page">
@@ -100,6 +59,8 @@ export default function Products() {
 
       {/* FILTER BAR */}
       <div className="products-filterbar">
+
+        {/* Sort */}
         <div className="filter-item">
           <label>Sort</label>
           <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}>
@@ -109,6 +70,7 @@ export default function Products() {
           </select>
         </div>
 
+        {/* Category */}
         <div className="filter-item">
           <label>Category</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -120,6 +82,7 @@ export default function Products() {
           </select>
         </div>
 
+        {/* Rating */}
         <div className="filter-item">
           <label>Rating</label>
           <select
@@ -132,6 +95,7 @@ export default function Products() {
           </select>
         </div>
 
+        {/* Price */}
         <div className="filter-item">
           <label>Price</label>
           <select
@@ -169,11 +133,7 @@ export default function Products() {
       {/* GRID */}
       <div className="product-grid">
         {products.map((p) => (
-          <ProductCard
-            key={p.id}
-            product={p}
-            onWishlistToggle={handleWishlistToggle}
-          />
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
 

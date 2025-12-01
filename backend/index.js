@@ -5,6 +5,8 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import "dotenv/config";
+import fetch from "node-fetch";
+
 
 
 dotenv.config();
@@ -213,6 +215,48 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+
+app.get("/products", async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search = "", category, sort, rating, price } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    let url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}`;
+
+    if (search) {
+      url = `https://dummyjson.com/products/search?q=${encodeURIComponent(search)}&limit=${limit}&skip=${skip}`;
+    }
+
+    if (category && category !== "all") {
+      url = `https://dummyjson.com/products/category/${category}`;
+    }
+
+    const response = await fetch(url);    // ⭐ Now works in LOCAL & PROD
+    const data = await response.json();
+
+    let items = data.products || [];
+
+    if (rating) items = items.filter((p) => p.rating >= Number(rating));
+    if (price === "low") items.sort((a, b) => a.price - b.price);
+    if (price === "high") items.sort((a, b) => b.price - a.price);
+    if (sort === "price") items.sort((a, b) => a.price - b.price);
+    if (sort === "rating") items.sort((a, b) => b.rating - a.rating);
+
+    res.json({
+      products: items,
+      total: data.total,
+      page: Number(page),
+      totalPages: Math.ceil(data.total / limit),
+    });
+
+  } catch (err) {
+    console.error("Products API error:", err);
+    res.status(500).json({ message: "Failed to fetch products." });
+  }
+});
+
 
 /* ====================================
    CART
