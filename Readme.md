@@ -1,4 +1,4 @@
-# 🛒 Caps-003 Backend  
+# 🛒 OS E-Commerce 
 Node.js • Express • Prisma • MySQL • JWT • Render Deployment
 
 This backend powers the **Caps-003** eCommerce application.  
