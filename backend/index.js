@@ -217,6 +217,49 @@ const authenticateToken = (req, res, next) => {
 /* ====================================
    CART
    ==================================== */
+/* ====================================
+   UPDATE CART ITEM (PUT)
+   ==================================== */
+app.put("/cart/update/:id", authenticateToken, async (req, res) => {
+  try {
+    const cartItemId = Number(req.params.id);
+    const { quantity } = req.body;
+
+    // Validate qty
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Quantity must be >= 1" });
+    }
+
+    // Ensure this cart item belongs to the logged-in user
+    const existingItem = await prisma.cartItem.findFirst({
+      where: {
+        id: cartItemId,
+        cart: { userId: req.user.id },
+      },
+    });
+
+    if (!existingItem) {
+      return res
+        .status(404)
+        .json({ message: "Item not found in your cart" });
+    }
+
+    // Update
+    const updatedItem = await prisma.cartItem.update({
+      where: { id: cartItemId },
+      data: { quantity },
+    });
+
+    res.json({
+      message: "Cart item updated successfully",
+      item: updatedItem,
+    });
+  } catch (err) {
+    console.error("Update cart error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 
 app.post("/cart/add", authenticateToken, async (req, res) => {
   try{
@@ -277,6 +320,48 @@ app.delete("/cart/clear", authenticateToken, async (req, res) => {
 /* ====================================
    ORDERS
    ==================================== */
+/* ====================================
+   BUY NOW ORDER (no cart needed)
+   ==================================== */
+app.post("/orders/buy-now", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { productId, title, price, thumbnail, quantity = 1 } = req.body;
+
+    if (!productId || !title || !price) {
+      return res.status(400).json({ message: "Missing product details" });
+    }
+
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        total: price * quantity,
+        items: {
+          create: [
+            {
+              productId,
+              title,
+              price,
+              quantity,
+              thumbnail,
+            },
+          ],
+        },
+      },
+      include: { items: true },
+    });
+
+    res.json({
+      message: "Buy Now order placed successfully!",
+      order,
+    });
+
+  } catch (err) {
+    console.error("Buy Now error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 
 app.post("/orders/place", authenticateToken, async (req, res) => {
   const userId = req.user.id;
@@ -325,6 +410,7 @@ app.get("/orders", authenticateToken, async (req, res) => {
 
   res.json(orders);
 });
+
 
 /* ====================================
    START SERVER

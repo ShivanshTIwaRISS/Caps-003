@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from "react";
-import api from "./services/api";  // axios instance
+import api from "./services/api"; // axios instance
 
 const CartContext = createContext();
 export function useCart() {
@@ -28,12 +28,19 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
   /* ---------------------------------------------------
-     1️⃣ LOAD CART FROM BACKEND 
+     1️⃣ LOAD CART FROM BACKEND  — ⭐ FIXED HERE
   --------------------------------------------------- */
   const loadCart = async () => {
     try {
-      const res = await api.get("/cart"); // token auto included
-      dispatch({ type: "SET_CART", payload: res.data });
+      const res = await api.get("/cart");
+
+      // ⭐ Normalize cart item ID
+      const normalized = res.data.map((item) => ({
+        ...item,
+        cartItemId: item.id, // <--- THIS IS THE REAL CART ITEM ID
+      }));
+
+      dispatch({ type: "SET_CART", payload: normalized });
     } catch (err) {
       console.log("❌ Cart load failed:", err);
       dispatch({ type: "SET_CART", payload: [] });
@@ -51,7 +58,7 @@ export function CartProvider({ children }) {
   const addItemToCart = async (product) => {
     try {
       await api.post("/cart/add", {
-        productId: product.productId || product.id,   // 🔥 FIXED
+        productId: product.productId || product.id,
         title: product.title,
         price: product.price,
         thumbnail: product.thumbnail,
@@ -88,7 +95,19 @@ export function CartProvider({ children }) {
   };
 
   /* ---------------------------------------------------
-     5️⃣ CALCULATE TOTALS
+     5️⃣ UPDATE ITEM (PUT)
+  --------------------------------------------------- */
+  const updateItemQuantity = async (cartItemId, quantity) => {
+    try {
+      await api.put(`/cart/update/${cartItemId}`, { quantity });
+      await loadCart();
+    } catch (err) {
+      console.log("❌ Update quantity failed:", err);
+    }
+  };
+
+  /* ---------------------------------------------------
+     6️⃣ TOTALS
   --------------------------------------------------- */
   const totalItems = state.cartItems.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = state.cartItems.reduce(
@@ -103,6 +122,7 @@ export function CartProvider({ children }) {
         addItemToCart,
         removeItemFromCart,
         clearCart,
+        updateItemQuantity, // ⭐ added
         totalItems,
         totalPrice,
         reloadCart: loadCart,

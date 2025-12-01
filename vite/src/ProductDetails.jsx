@@ -10,14 +10,16 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { addItemToCart, cartItems, clearCart } = useCart();
+  const { addItemToCart, cartItems } = useCart();
 
-  // ⭐ FIX: backend & local cart use "productId"
-  const isInCart = cartItems.some((i) => i.productId === Number(id));
-
+  // user + token
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("accessToken");
 
+  // check if product already in cart
+  const isInCart = cartItems.some((i) => i.productId === Number(id));
+
+  // fetch product
   useEffect(() => {
     fetch(`https://dummyjson.com/products/${id}`)
       .then((res) => res.json())
@@ -31,7 +33,7 @@ export default function ProductDetails() {
       });
   }, [id]);
 
-  /* ⭐ BACKEND add-to-cart helper */
+  // ⭐ Sync add-to-cart with backend
   const syncToBackend = async () => {
     if (!token) return;
 
@@ -42,12 +44,18 @@ export default function ProductDetails() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        productId: product.id, // 🔥 FIXED KEY
+        productId: product.id,
         title: product.title,
         price: product.price,
         thumbnail: product.thumbnail,
       }),
     });
+  };
+
+  // ⭐ BUY NOW handler (does NOT touch cart)
+  const handleBuyNow = (productObj) => {
+    localStorage.setItem("buyNowProduct", JSON.stringify(productObj));
+    navigate("/checkout"); // go to checkout in BUY NOW mode
   };
 
   if (loading)
@@ -68,7 +76,7 @@ export default function ProductDetails() {
 
         <div className="pd-info">
           <h1 className="pd-title">{product.title}</h1>
-          <p className="pd-price">${product.price}</p>
+          <p className="pd-price">₹{product.price}</p>
           <p className="pd-rating">⭐ {product.rating} / 5</p>
           <p className="pd-desc">{product.description}</p>
 
@@ -81,34 +89,14 @@ export default function ProductDetails() {
 
           <div className="pd-buttons">
 
-            {/* -------------------- ORIGINAL COMMENTED BLOCK (KEEPING SAFE) --------------------
-              
-            <button
-              onClick={() =>
-                addItemToCart({
-                  id: product.id,
-                  title: product.title,
-                  price: product.price,
-                  thumbnail: product.thumbnail,
-                })
-              }
-              className="pd-cart-btn"
-            >
-              Add to Cart
-            </button>
-            ------------------------------------------------------------------ */}
-
-            {/* ⭐ ACTIVE BUTTON (Protected + Dynamic + Backend Synced) */}
+            {/* ⭐ Add to Cart */}
             {!isInCart ? (
               <button
                 className="pd-cart-btn"
                 onClick={async () => {
-                  if (!user) {
-                    navigate("/login"); // ⭐ redirect if not logged in
-                    return;
-                  }
+                  if (!user) return navigate("/login");
 
-                  // Local cart update with correct productId
+                  // local cart add
                   addItemToCart({
                     productId: product.id,
                     title: product.title,
@@ -116,7 +104,7 @@ export default function ProductDetails() {
                     thumbnail: product.thumbnail,
                   });
 
-                  // Backend sync
+                  // backend sync
                   await syncToBackend();
                 }}
               >
@@ -132,27 +120,18 @@ export default function ProductDetails() {
               </button>
             )}
 
-            {/* ⭐ BUY NOW (Protected + Backend Sync) */}
+            {/* ⭐ BUY NOW (Option-C Safe Mode) */}
             <button
               className="pd-buy-btn"
-              onClick={async () => {
-                if (!user) {
-                  navigate("/login");
-                  return;
-                }
+              onClick={() => {
+                if (!user) return navigate("/login");
 
-                clearCart(); // Clear local cart
-
-                addItemToCart({
+                handleBuyNow({
                   productId: product.id,
                   title: product.title,
                   price: product.price,
                   thumbnail: product.thumbnail,
                 });
-
-                await syncToBackend();
-
-                navigate("/checkout");
               }}
             >
               Buy Now

@@ -7,26 +7,19 @@ import { useCart } from "./CartContext";
 export default function Cart() {
   const {
     cartItems,
-    removeItemFromCart,   // ⭐ NOW backend-remove (cartItemId required)
-    // increaseQuantity,     // ❌ local only → we will NOT use this
-    // decreaseQuantity,     // ❌ local only → we will NOT use this
-    clearCart,            // ⭐ backend-clear
+    removeItemFromCart,
+    clearCart,
+    updateItemQuantity,
     totalItems,
     totalPrice,
-    reloadCart            // ⭐ load from backend
+    reloadCart
   } = useCart();
 
   const navigate = useNavigate();
-
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(true);
   const token = localStorage.getItem("accessToken");
 
-  // TEMP: remove Firebase for now
-  useEffect(() => {
-    setCurrentUser(true); // allow checkout
-  }, []);
-
-  // ⭐ Load cart from backend on mount
+  // Load cart on mount
   useEffect(() => {
     if (token) reloadCart();
   }, [token, reloadCart]);
@@ -40,50 +33,42 @@ export default function Cart() {
     }
   };
 
-  // ⭐ BACKEND: Increase Quantity
+  /* ============================================
+     ⭐ BACKEND: Increase Quantity
+  ============================================ */
   const handleIncrease = async (item) => {
-    await fetch(`https://caps-003.onrender.com/cart/add`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        productId: item.productId || item.id,
-        title: item.title,
-        price: item.price,
-        thumbnail: item.thumbnail,
-      }),
-    });
-
-    reloadCart(); // ⭐ refresh UI
+    await updateItemQuantity(item.cartItemId, item.quantity + 1);
   };
 
-  // ⭐ BACKEND: Decrease Quantity
+  /* ============================================
+     ⭐ BACKEND: Decrease Quantity
+  ============================================ */
   const handleDecrease = async (item) => {
     if (item.quantity === 1) {
-      return await handleRemove(item.id, item.cartItemId);
+      return await handleRemove(item.cartItemId);
     }
 
-    await fetch(`https://caps-003.onrender.com/cart/remove/${item.cartItemId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    reloadCart(); // refresh from backend
+    await updateItemQuantity(item.cartItemId, item.quantity - 1);
   };
 
-  // ⭐ BACKEND: Remove item fully
-  const handleRemove = async (productId, cartItemId) => {
-    await removeItemFromCart(cartItemId); // backend function
-    reloadCart();
+  /* ============================================
+     ⭐ BACKEND: Remove item fully
+  ============================================ */
+  const handleRemove = async (cartItemId) => {
+    await removeItemFromCart(cartItemId);
   };
 
-  // ⭐ BACKEND: Clear Cart
+  /* ============================================
+     ⭐ BACKEND: Clear Cart
+  ============================================ */
   const handleClear = async () => {
     await clearCart();
     reloadCart();
   };
+
+  /* ============================================
+     UI
+  ============================================ */
 
   if (cartItems.length === 0) {
     return (
@@ -105,7 +90,7 @@ export default function Cart() {
         {/* LEFT — ITEMS */}
         <div className="cart-items">
           {cartItems.map((item) => (
-            <div key={item.id} className="cart-item">
+            <div key={item.cartItemId} className="cart-item">
               <img src={item.thumbnail} alt={item.title} />
 
               <div className="cart-item-info">
@@ -113,12 +98,8 @@ export default function Cart() {
                 <p className="cart-price">₹{item.price.toFixed(2)}</p>
 
                 <div className="cart-qty">
-                  {/* ⭐ backend decrease */}
                   <button onClick={() => handleDecrease(item)}>-</button>
-
                   <span>{item.quantity}</span>
-
-                  {/* ⭐ backend increase */}
                   <button onClick={() => handleIncrease(item)}>+</button>
                 </div>
 
@@ -128,7 +109,7 @@ export default function Cart() {
 
                 <button
                   className="cart-remove"
-                  onClick={() => handleRemove(item.id, item.cartItemId)}
+                  onClick={() => handleRemove(item.cartItemId)}
                 >
                   Remove
                 </button>

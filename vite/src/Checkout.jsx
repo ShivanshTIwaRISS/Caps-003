@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCart } from "./CartContext";
-import api from "./services/api"; // ⭐ use your axios instance
+import api from "./services/api";
 
 export default function Checkout() {
   const { cartItems, totalPrice, clearCart } = useCart();
 
   const [orderPlaced, setOrderPlaced] = useState(false);
+
+  const [mode, setMode] = useState("cart"); // ⭐ cart OR buyNow
+
+  const [buyNowProduct, setBuyNowProduct] = useState(null);
 
   const [address, setAddress] = useState({
     name: "",
@@ -24,6 +28,18 @@ export default function Checkout() {
   const [confirmCod, setConfirmCod] = useState(false);
 
   const token = localStorage.getItem("accessToken");
+
+  // ⭐ Detect if this checkout is Buy Now
+  useEffect(() => {
+    const product = localStorage.getItem("buyNowProduct");
+
+    if (product) {
+      setMode("buyNow");
+      setBuyNowProduct(JSON.parse(product));
+    } else {
+      setMode("cart");
+    }
+  }, []);
 
   const handleChange = (e) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
@@ -49,36 +65,40 @@ export default function Checkout() {
       return;
     }
 
-    // ---------------- ORIGINAL FIREBASE CODE (KEPT) ----------------
-    /*
-    await addDoc(collection(db, "orders"), {
-      userId: auth.currentUser.uid,
-      items: cartItems,
-      total: totalPrice,
-      address,
-      paymentMethod,
-      createdAt: serverTimestamp(),
-    });
-
-    clearCart();
-    */
-    // ---------------------------------------------------------------
-
-    // ⭐ BACKEND ORDER API CALL
     try {
-      const res = await api.post("/orders/place");
+      let res;
+
+      if (mode === "buyNow") {
+        // ⭐ BUY NOW MODE → do NOT clear cart
+        res = await api.post("/orders/buy-now", {
+          productId: buyNowProduct.productId || buyNowProduct.id,
+          title: buyNowProduct.title,
+          price: buyNowProduct.price,
+          quantity: 1,
+          thumbnail: buyNowProduct.thumbnail,
+          address,
+          paymentMethod,
+        });
+
+        // remove buy-now cache
+        localStorage.removeItem("buyNowProduct");
+      } else {
+        // ⭐ CART CHECKOUT MODE → clear entire cart
+        res = await api.post("/orders/place");
+
+        clearCart();
+      }
 
       console.log("ORDER PLACED:", res.data);
+      setOrderPlaced(true);
 
-      clearCart(); // ⭐ Clear cart locally
-      setOrderPlaced(true); // 🎉 Show success screen
     } catch (err) {
       console.error("❌ Order error:", err);
       alert("Failed to place order. Try again.");
     }
   };
 
-  // ========== SUCCESS SCREEN ==========
+  // ========== SUCCESS ==========
   if (orderPlaced) {
     return (
       <div className="checkout-success">
@@ -88,10 +108,19 @@ export default function Checkout() {
     );
   }
 
+  // ⭐ Determine items to display
+  const checkoutItems = mode === "buyNow" ? [buyNowProduct] : cartItems;
+  const checkoutTotal =
+    mode === "buyNow"
+      ? buyNowProduct?.price || 0
+      : totalPrice;
+
   // ========== MAIN CHECKOUT PAGE ==========
   return (
     <div className="checkout-page">
-      <h2 className="checkout-title">Checkout</h2>
+      <h2 className="checkout-title">
+        Checkout ({mode === "buyNow" ? "Buy Now" : "Cart Checkout"})
+      </h2>
 
       <div className="checkout-grid">
 
@@ -108,23 +137,19 @@ export default function Checkout() {
         <div className="checkout-section">
           <h3>Order Summary</h3>
 
-          {cartItems.length === 0 ? (
-            <p className="empty-cart">Your cart is empty.</p>
-          ) : (
-            cartItems.map((item) => (
-              <div key={item.id} className="summary-item">
-                <img src={item.thumbnail} alt={item.title} />
-                <div>
-                  <p>{item.title}</p>
-                  <p>Qty: {item.quantity}</p>
-                  <p>₹{(item.price * item.quantity).toFixed(2)}</p>
-                </div>
+          {checkoutItems.map((item, index) => (
+            <div key={index} className="summary-item">
+              <img src={item.thumbnail} alt={item.title} />
+              <div>
+                <p>{item.title}</p>
+                <p>Qty: {mode === "buyNow" ? 1 : item.quantity}</p>
+                <p>₹{(item.price * (item.quantity || 1)).toFixed(2)}</p>
               </div>
-            ))
-          )}
+            </div>
+          ))}
 
           <h4 className="summary-total">
-            Total: ₹{totalPrice.toFixed(2)}
+            Total: ₹{checkoutTotal.toFixed(2)}
           </h4>
         </div>
 
