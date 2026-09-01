@@ -21,32 +21,18 @@ export default function Profile() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [activeTab, setActiveTab] = useState("profile");
-  const [name, setName] = useState(user?.name || "Shivansh Tiwari");
-  const [email, setEmail] = useState(user?.email || "shivansh@example.com");
-  const [phone, setPhone] = useState("+91 98765 43210");
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Address Manager State
-  const defaultSavedAddresses = [
-    {
-      id: "addr-1",
-      label: "Home",
-      name: name || "Shivansh Tiwari",
-      street: "24 Cyber Tower, MG Road",
-      city: "Bengaluru",
-      state: "Karnataka",
-      zip: "560001",
-      phone: phone || "+91 98765 43210",
-      isDefault: true,
-    },
-  ];
-
+  // Address Manager State — starts empty unless user saved addresses
   const [addresses, setAddresses] = useState(() => {
     try {
       const stored = localStorage.getItem("saved_addresses");
-      return stored ? JSON.parse(stored) : defaultSavedAddresses;
+      return stored ? JSON.parse(stored) : [];
     } catch (e) {
-      return defaultSavedAddresses;
+      return [];
     }
   });
 

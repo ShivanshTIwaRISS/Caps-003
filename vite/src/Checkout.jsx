@@ -16,6 +16,8 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, totalPrice, clearCart } = useCart();
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   const [mode, setMode] = useState("cart");
   const [buyNowProduct, setBuyNowProduct] = useState(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -25,27 +27,51 @@ export default function Checkout() {
   // COD confirmation modal state
   const [showCodModal, setShowCodModal] = useState(false);
 
-  // Address state
-  const [address, setAddress] = useState({
-    name: "Shivansh Tiwari",
-    street: "24 Cyber Tower, MG Road",
-    city: "Bengaluru",
-    state: "Karnataka",
-    zip: "560001",
-    phone: "+91 98765 43210",
+  // Saved Addresses State
+  const [savedAddresses, setSavedAddresses] = useState(() => {
+    try {
+      const stored = localStorage.getItem("saved_addresses");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
   });
+
+  const [selectedAddressId, setSelectedAddressId] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("saved_addresses") || "[]");
+      const defaultAddr = stored.find((a) => a.isDefault);
+      return defaultAddr ? defaultAddr.id : stored[0]?.id || "new";
+    } catch {
+      return "new";
+    }
+  });
+
+  // Empty Address State initially (no hardcoded pre-fill)
+  const [address, setAddress] = useState({
+    label: "Home",
+    name: user?.name || "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    phone: "",
+  });
+
+  const [saveAddressForFuture, setSaveAddressForFuture] = useState(true);
 
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [cardDetails, setCardDetails] = useState({
-    number: "4532 •••• •••• 8829",
-    name: "SHIVANSH TIWARI",
-    expiry: "08/29",
-    cvv: "•••",
+    number: "",
+    name: "",
+    expiry: "",
+    cvv: "",
   });
-  const [upiId, setUpiId] = useState("user@okaxis");
+  const [upiId, setUpiId] = useState("");
 
   const [discountInfo, setDiscountInfo] = useState({ amount: 0, promo: "" });
+  const [finalPaidAmount, setFinalPaidAmount] = useState(0);
 
   useEffect(() => {
     const buyNow = localStorage.getItem("buyNowProduct");
@@ -64,6 +90,20 @@ export default function Checkout() {
     }
   }, []);
 
+  // When saved address selection changes
+  const handleSelectSavedAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setAddress({
+      label: addr.label || "Home",
+      name: addr.name || "",
+      street: addr.street || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      zip: addr.zip || "",
+      phone: addr.phone || "",
+    });
+  };
+
   const handleAddressChange = (e) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
   };
@@ -76,7 +116,7 @@ export default function Checkout() {
 
   const handleInitiateOrder = () => {
     if (!isAddressValid) {
-      alert("Please enter a valid and complete shipping address.");
+      alert("Please enter a valid shipping address (Name, Street, City, and Pincode are required).");
       return;
     }
 
@@ -87,14 +127,26 @@ export default function Checkout() {
     }
   };
 
-  const [finalPaidAmount, setFinalPaidAmount] = useState(0);
-
   const executeOrderPlacement = async () => {
     setLoading(true);
     setShowCodModal(false);
     const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
     const currentGrandTotal = grandTotal;
     setFinalPaidAmount(currentGrandTotal);
+
+    // Save address if user opted to save new address
+    if (selectedAddressId === "new" && saveAddressForFuture && isAddressValid) {
+      const newSaved = {
+        ...address,
+        id: `addr-${Date.now()}`,
+        isDefault: savedAddresses.length === 0,
+      };
+      const updatedList = [...savedAddresses, newSaved];
+      setSavedAddresses(updatedList);
+      try {
+        localStorage.setItem("saved_addresses", JSON.stringify(updatedList));
+      } catch (e) {}
+    }
 
     const orderData = {
       id: newOrderId,
@@ -214,24 +266,90 @@ export default function Checkout() {
               <span>Shipping Address</span>
             </div>
 
+            {/* Saved Address Selection Cards (if any addresses saved) */}
+            {savedAddresses.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: "10px" }}>
+                  Select from Saved Addresses
+                </label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => handleSelectSavedAddress(addr)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        background: selectedAddressId === addr.id ? "var(--chip-bg)" : "var(--bg-subtle)",
+                        border: `2px solid ${selectedAddressId === addr.id ? "var(--brand-primary)" : "var(--panel-border)"}`,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <strong>{addr.label || "Address"}</strong>
+                          <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>({addr.name})</span>
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                          {addr.street}, {addr.city} - {addr.zip}
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="savedAddrRadio"
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => handleSelectSavedAddress(addr)}
+                      />
+                    </div>
+                  ))}
+
+                  <div
+                    onClick={() => {
+                      setSelectedAddressId("new");
+                      setAddress({ label: "Home", name: user?.name || "", street: "", city: "", state: "", zip: "", phone: "" });
+                    }}
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      background: selectedAddressId === "new" ? "var(--chip-bg)" : "transparent",
+                      border: `2px dashed ${selectedAddressId === "new" ? "var(--brand-primary)" : "var(--panel-border)"}`,
+                      cursor: "pointer",
+                      textAlign: "center",
+                      fontWeight: 700,
+                      fontSize: "0.88rem",
+                      color: "var(--brand-primary)",
+                    }}
+                  >
+                    + Enter New Address
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Address Input Form */}
             <div className="checkout-inputs-grid">
               <div className="form-group full-span">
                 <label>Full Name</label>
                 <input
                   name="name"
-                  placeholder="Full Name"
+                  placeholder="Recipient Full Name"
                   value={address.name}
                   onChange={handleAddressChange}
+                  required
                 />
               </div>
 
               <div className="form-group full-span">
-                <label>Street Address / Apartment</label>
+                <label>Street Address / Apartment / Building</label>
                 <input
                   name="street"
-                  placeholder="Street Address"
+                  placeholder="e.g. Flat 402, Sunshine Apts, MG Road"
                   value={address.street}
                   onChange={handleAddressChange}
+                  required
                 />
               </div>
 
@@ -239,9 +357,10 @@ export default function Checkout() {
                 <label>City</label>
                 <input
                   name="city"
-                  placeholder="City"
+                  placeholder="e.g. Bengaluru"
                   value={address.city}
                   onChange={handleAddressChange}
+                  required
                 />
               </div>
 
@@ -249,9 +368,10 @@ export default function Checkout() {
                 <label>ZIP / Pincode</label>
                 <input
                   name="zip"
-                  placeholder="Pincode"
+                  placeholder="e.g. 560001"
                   value={address.zip}
                   onChange={handleAddressChange}
+                  required
                 />
               </div>
 
@@ -259,11 +379,25 @@ export default function Checkout() {
                 <label>Contact Phone</label>
                 <input
                   name="phone"
-                  placeholder="Phone Number"
+                  placeholder="e.g. +91 98765 43210"
                   value={address.phone}
                   onChange={handleAddressChange}
                 />
               </div>
+
+              {/* Checkbox to Save Address for Future Use */}
+              {selectedAddressId === "new" && (
+                <div className="full-span" style={{ marginTop: "4px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>
+                    <input
+                      type="checkbox"
+                      checked={saveAddressForFuture}
+                      onChange={(e) => setSaveAddressForFuture(e.target.checked)}
+                    />
+                    <span>Save this address for future purchases</span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
@@ -332,7 +466,7 @@ export default function Checkout() {
                   <div className="form-group full-span">
                     <label>Card Number</label>
                     <input
-                      placeholder="Card Number"
+                      placeholder="16-Digit Card Number"
                       value={cardDetails.number}
                       onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
                     />
@@ -487,7 +621,7 @@ export default function Checkout() {
               <div><strong>Delivery Address:</strong></div>
               <div>{address.name}</div>
               <div>{address.street}, {address.city} - {address.zip}</div>
-              <div>Phone: {address.phone}</div>
+              {address.phone && <div>Phone: {address.phone}</div>}
             </div>
 
             <div style={{ fontSize: "0.8rem", color: "var(--brand-warning)", fontWeight: 600 }}>
