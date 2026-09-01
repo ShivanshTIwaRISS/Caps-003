@@ -10,6 +10,8 @@ import {
   MoonIcon,
   CheckIcon,
   LogOutIcon,
+  CloseIcon,
+  TrashIcon,
 } from "./components/Icons";
 
 export default function Profile() {
@@ -23,6 +25,41 @@ export default function Profile() {
   const [email, setEmail] = useState(user?.email || "shivansh@example.com");
   const [phone, setPhone] = useState("+91 98765 43210");
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Address Manager State
+  const defaultSavedAddresses = [
+    {
+      id: "addr-1",
+      label: "Home",
+      name: name || "Shivansh Tiwari",
+      street: "24 Cyber Tower, MG Road",
+      city: "Bengaluru",
+      state: "Karnataka",
+      zip: "560001",
+      phone: phone || "+91 98765 43210",
+      isDefault: true,
+    },
+  ];
+
+  const [addresses, setAddresses] = useState(() => {
+    try {
+      const stored = localStorage.getItem("saved_addresses");
+      return stored ? JSON.parse(stored) : defaultSavedAddresses;
+    } catch (e) {
+      return defaultSavedAddresses;
+    }
+  });
+
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    label: "Home",
+    name: name,
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    phone: phone,
+  });
 
   const logoutNow = () => {
     localStorage.removeItem("accessToken");
@@ -47,6 +84,53 @@ export default function Profile() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
     }
+  };
+
+  const handleSaveAddress = (e) => {
+    e.preventDefault();
+    if (!newAddress.street || !newAddress.city || !newAddress.zip) {
+      alert("Please fill in street address, city, and zip code.");
+      return;
+    }
+
+    const created = {
+      ...newAddress,
+      id: `addr-${Date.now()}`,
+      isDefault: addresses.length === 0,
+    };
+
+    const updated = [...addresses, created];
+    setAddresses(updated);
+    localStorage.setItem("saved_addresses", JSON.stringify(updated));
+    setShowAddressModal(false);
+    setNewAddress({
+      label: "Home",
+      name: name,
+      street: "",
+      city: "",
+      state: "",
+      zip: "",
+      phone: phone,
+    });
+  };
+
+  const handleDeleteAddress = (id) => {
+    if (addresses.length === 1) {
+      alert("You must keep at least one delivery address.");
+      return;
+    }
+    const filtered = addresses.filter((a) => a.id !== id);
+    setAddresses(filtered);
+    localStorage.setItem("saved_addresses", JSON.stringify(filtered));
+  };
+
+  const handleSetDefaultAddress = (id) => {
+    const updated = addresses.map((a) => ({
+      ...a,
+      isDefault: a.id === id,
+    }));
+    setAddresses(updated);
+    localStorage.setItem("saved_addresses", JSON.stringify(updated));
   };
 
   return (
@@ -240,7 +324,7 @@ export default function Profile() {
                 <div>
                   <strong>Active Theme: {isDark ? "Dark Mode" : "Light Mode"}</strong>
                   <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    Theme preferences are synced across your browsing session.
+                    Theme preferences are remembered for your account.
                   </div>
                 </div>
 
@@ -284,49 +368,185 @@ export default function Profile() {
         {/* TAB 3: SAVED ADDRESSES */}
         {activeTab === "addresses" && (
           <div>
-            <h1 className="profile-title" style={{ fontSize: "1.8rem", marginBottom: "20px" }}>
-              Saved Delivery Addresses
-            </h1>
-
             <div
               style={{
-                background: "var(--bg-subtle)",
-                border: "1px solid var(--panel-border)",
-                borderRadius: "16px",
-                padding: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 marginBottom: "20px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                }}
+              <h1 className="profile-title" style={{ fontSize: "1.8rem", margin: 0 }}>
+                Saved Delivery Addresses
+              </h1>
+              <button
+                className="cta-primary"
+                onClick={() => setShowAddressModal(true)}
+                style={{ padding: "8px 16px", fontSize: "0.88rem" }}
               >
-                <strong>Primary Delivery Address</strong>
-                <span
-                  style={{
-                    color: "var(--brand-accent)",
-                    fontWeight: 700,
-                    fontSize: "0.82rem",
-                  }}
-                >
-                  Default
-                </span>
-              </div>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.5 }}>
-                {name} <br />
-                24 Cyber Tower, MG Road <br />
-                Bengaluru, Karnataka - 560001 <br />
-                Contact: {phone}
-              </p>
+                + Add New Address
+              </button>
             </div>
 
-            <button className="cta-secondary">+ Add New Delivery Address</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {addresses.map((addr) => (
+                <div
+                  key={addr.id}
+                  style={{
+                    background: "var(--bg-subtle)",
+                    border: `1px solid ${addr.isDefault ? "var(--brand-primary)" : "var(--panel-border)"}`,
+                    borderRadius: "16px",
+                    padding: "20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <strong>{addr.label || "Address"}</strong>
+                      {addr.isDefault && (
+                        <span
+                          style={{
+                            background: "var(--chip-bg)",
+                            color: "var(--brand-primary)",
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            padding: "2px 8px",
+                            borderRadius: "6px",
+                          }}
+                        >
+                          DEFAULT
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      {!addr.isDefault && (
+                        <button
+                          onClick={() => handleSetDefaultAddress(addr.id)}
+                          style={{ fontSize: "0.8rem", color: "var(--brand-primary)", fontWeight: 700 }}
+                        >
+                          Set as Default
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteAddress(addr.id)}
+                        style={{ color: "var(--brand-danger)", padding: "4px" }}
+                        title="Delete Address"
+                      >
+                        <TrashIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.5 }}>
+                    {addr.name} <br />
+                    {addr.street} <br />
+                    {addr.city}, {addr.state} - {addr.zip} <br />
+                    Contact: {addr.phone}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>
+
+      {/* ADD NEW ADDRESS MODAL */}
+      {showAddressModal && (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>Add Delivery Address</h3>
+              <button onClick={() => setShowAddressModal(false)}>
+                <CloseIcon size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAddress} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div className="form-group">
+                <label>Address Label</label>
+                <select
+                  value={newAddress.label}
+                  onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
+                >
+                  <option value="Home">Home</option>
+                  <option value="Office / Work">Office / Work</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Recipient Name</label>
+                <input
+                  value={newAddress.name}
+                  onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Street Address / Flat / Floor</label>
+                <input
+                  value={newAddress.street}
+                  placeholder="e.g. 402 Palm Grove Apts, 12th Main"
+                  onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="checkout-inputs-grid">
+                <div className="form-group">
+                  <label>City</label>
+                  <input
+                    value={newAddress.city}
+                    placeholder="e.g. Bengaluru"
+                    onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>ZIP / Pincode</label>
+                  <input
+                    value={newAddress.zip}
+                    placeholder="e.g. 560001"
+                    onChange={(e) => setNewAddress({ ...newAddress, zip: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Contact Phone</label>
+                <input
+                  value={newAddress.phone}
+                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="cta-secondary"
+                  onClick={() => setShowAddressModal(false)}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="cta-primary" style={{ flex: 1 }}>
+                  Save Address
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

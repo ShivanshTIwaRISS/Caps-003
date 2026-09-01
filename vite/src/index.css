@@ -131,14 +131,6 @@ input, select, textarea {
   min-height: 100vh;
 }
 
-/* SVG Icon Helper */
-.icon-svg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-}
-
 /* ==========================================================================
    NAVBAR
    ========================================================================== */
@@ -304,7 +296,7 @@ input, select, textarea {
   gap: 12px;
 }
 
-.nav-icon-btn, .theme-toggle-btn {
+.nav-icon-btn {
   position: relative;
   display: flex;
   align-items: center;
@@ -318,7 +310,7 @@ input, select, textarea {
   transition: all 0.2s ease;
 }
 
-.nav-icon-btn:hover, .theme-toggle-btn:hover {
+.nav-icon-btn:hover {
   border-color: var(--brand-primary);
   background: var(--panel-elevated);
   transform: translateY(-2px);
@@ -487,6 +479,115 @@ input, select, textarea {
 }
 
 /* ==========================================================================
+   AUTHENTICATION PAGES (LOGIN & SIGNUP)
+   ========================================================================== */
+.auth-container {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-card-wrapper {
+  max-width: 440px;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  padding: 36px 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-glow);
+}
+
+.auth-header h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.auth-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-glow);
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.auth-submit-btn:hover {
+  background: var(--brand-primary-hover);
+  transform: translateY(-2px);
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.auth-link {
+  color: var(--brand-primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.auth-trust-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+/* ==========================================================================
    HOMEPAGE & HERO
    ========================================================================== */
 .home-page {
@@ -622,7 +723,6 @@ input, select, textarea {
   border-color: var(--brand-primary);
 }
 
-/* Hero Right Visual Tiles */
 .neo-hero-right {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1694,12 +1794,51 @@ input, select, textarea {
   transform: translateY(-2px);
 }
 
-/* Modal Overlay for COD Confirmation */
+/* Empty Cart Alignment */
+.cart-empty {
+  max-width: 540px;
+  margin: 40px auto;
+  text-align: center;
+  padding: 60px 32px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-empty h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.cart-empty p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  max-width: 400px;
+}
+
+.orders-empty, .no-results {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--panel);
+  border: 1px dashed var(--panel-border);
+  border-radius: 20px;
+}
+
+/* ==========================================================================
+   MODALS & CHECKOUT
+   ========================================================================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1737,9 +1876,6 @@ input, select, textarea {
   margin-top: 8px;
 }
 
-/* ==========================================================================
-   CHECKOUT STEPPER
-   ========================================================================== */
 .checkout-section-card {
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -2247,7 +2383,7 @@ input, select, textarea {
   gap: 12px;
 }
 
-/* Skeleton Loaders */
+/* Skeletons */
 .skeleton {
   background: var(--skeleton-base);
   background-image: linear-gradient(

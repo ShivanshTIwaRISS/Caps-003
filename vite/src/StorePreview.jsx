@@ -19,7 +19,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("All");
 
-  // Countdown timer for Flash Deals (HH:MM:SS)
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 28, seconds: 45 });
 
   useEffect(() => {
@@ -123,9 +122,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Hero Right Visual Tiles with ACCURATE Redirections */}
+        {/* Hero Right Visual Tiles with EXACT Matching Imagery */}
         <div className="neo-hero-right">
-          {/* Tile 1: Athletic Shoes -> search=shoes */}
+          {/* Tile 1: Athletic Shoes */}
           <div
             className="neo-tile neo-tile--main"
             style={{
@@ -137,18 +136,18 @@ export default function Home() {
           >
             <div className="neo-tile-overlay" />
             <div className="neo-tile-content">
-              <span className="neo-pill">Featured Apparel</span>
-              <h3>Performance Footwear</h3>
-              <p>Ergonomic high-traction athletic series.</p>
+              <span className="neo-pill">Performance Series</span>
+              <h3>Athletic Performance Footwear</h3>
+              <p>High-traction ergonomic running shoes and trainers.</p>
             </div>
           </div>
 
-          {/* Tile 2: Audio & Headphones -> search=headphones */}
+          {/* Tile 2: Audio & Headphones (Accurate high-res audio photo) */}
           <div
             className="neo-tile neo-tile--small"
             style={{
               backgroundImage:
-                "url('https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=80')",
+                "url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80')",
             }}
             onClick={() => navigate("/products?search=headphones")}
             role="button"
@@ -160,7 +159,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tile 3: Laptops & Workstations -> category=laptops */}
+          {/* Tile 3: Laptops & Workstations */}
           <div
             className="neo-tile neo-tile--small"
             style={{

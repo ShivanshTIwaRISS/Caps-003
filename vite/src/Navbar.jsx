@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-import { useTheme } from "./ThemeContext";
 import { getSearchSuggestions } from "./services/productService";
 import {
   SearchIcon,
   CartIcon,
   PackageIcon,
-  SunIcon,
-  MoonIcon,
   SettingsIcon,
   LogOutIcon,
 } from "./components/Icons";
@@ -19,7 +16,6 @@ export default function Navbar() {
   const profileRef = useRef(null);
 
   const { totalItems } = useCart();
-  const { theme, toggleTheme, isDark } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -156,16 +152,6 @@ export default function Navbar() {
 
         {/* RIGHT ACTIONS */}
         <div className="nav-right">
-          {/* Theme Toggle Button with SVG Icons */}
-          <button
-            className="theme-toggle-btn"
-            onClick={toggleTheme}
-            title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
-            aria-label="Toggle Theme"
-          >
-            {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-          </button>
-
           {/* Orders Link */}
           {user && (
             <button
@@ -237,16 +223,6 @@ export default function Navbar() {
                   >
                     <PackageIcon size={16} />
                     <span>My Orders</span>
-                  </button>
-
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => {
-                      toggleTheme();
-                    }}
-                  >
-                    {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
                   </button>
 
                   <button
