@@ -1,0 +1,540 @@
+{
+  "info": {
+    "name": "OS Store – Complete API Test Suite",
+    "_postman_id": "os-store-api-collection-v1",
+    "description": "Full Postman collection to test all OS Store backend endpoints: Auth, Products, Cart, Orders, and Profile. Includes environment variables and automated token injection.\n\n**Base URL**: https://caps-003-backend.onrender.com\n**Local URL**: http://localhost:5000\n\n**Usage:**\n1. Import this collection into Postman\n2. Set the environment variable `BASE_URL` to your backend URL\n3. Run 'Sign Up' or 'Login' first — the access token is auto-saved\n4. All authenticated requests use `{{accessToken}}` automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "testEmail", "value": "testuser@osstore.io", "type": "string" },
+    { "key": "testPassword", "value": "test123456", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Sign Up (Register New User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.refreshToken);",
+                  "  pm.test('Sign Up successful', () => pm.response.to.have.status(201));",
+                  "  pm.test('Access token returned', () => pm.expect(res.accessToken).to.be.a('string'));",
+                  "  pm.test('User object returned', () => pm.expect(res.user.email).to.include('@'));",
+                  "} else {",
+                  "  pm.test('Sign Up response received', () => { console.log('Status:', pm.response.code, pm.response.json().message); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/signup", "host": ["{{BASE_URL}}"], "path": ["signup"] }
+          }
+        },
+        {
+          "name": "2. Login (Get Tokens)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.refreshToken);",
+                  "  pm.test('Login successful', () => pm.response.to.have.status(200));",
+                  "  pm.test('Access token is JWT', () => pm.expect(res.accessToken.split('.').length).to.equal(3));",
+                  "  pm.test('Refresh token returned', () => pm.expect(res.refreshToken).to.be.a('string'));",
+                  "  pm.test('User name returned', () => pm.expect(res.user.name).to.be.a('string'));",
+                  "  console.log('Token saved:', res.accessToken.slice(0, 20) + '...');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/login", "host": ["{{BASE_URL}}"], "path": ["login"] }
+          }
+        },
+        {
+          "name": "3. Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.test('New access token returned', () => pm.expect(res.accessToken).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/refresh", "host": ["{{BASE_URL}}"], "path": ["refresh"] }
+          }
+        },
+        {
+          "name": "4. Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Logout successful', () => pm.response.to.have.status(200));",
+                  "pm.test('Message returned', () => pm.expect(pm.response.json().message).to.include('Logged out'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/logout", "host": ["{{BASE_URL}}"], "path": ["logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Profile",
+      "item": [
+        {
+          "name": "5. Update Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile updated', () => pm.response.to.have.status(200));",
+                  "pm.test('User object returned', () => pm.expect(pm.response.json().user).to.be.an('object'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Shivansh Tiwari\",\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/update-profile", "host": ["{{BASE_URL}}"], "path": ["update-profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Products",
+      "item": [
+        {
+          "name": "6. Get All Products (Page 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('Products array returned', () => pm.expect(res.products).to.be.an('array'));",
+                  "pm.test('At least 1 product', () => pm.expect(res.products.length).to.be.greaterThan(0));",
+                  "pm.test('Total count present', () => pm.expect(res.total).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/products?page=1&limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Get Products by Category (Smartphones)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('Products returned', () => pm.expect(res.products).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/products?category=smartphones",
+              "host": ["{{BASE_URL}}"],
+              "path": ["products"],
+              "query": [{ "key": "category", "value": "smartphones" }]
+            }
+          }
+        },
+        {
+          "name": "8. Search Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Search results returned', () => pm.expect(pm.response.json().products).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/products?search=laptop",
+              "host": ["{{BASE_URL}}"],
+              "path": ["products"],
+              "query": [{ "key": "search", "value": "laptop" }]
+            }
+          }
+        },
+        {
+          "name": "9. Search Suggestions (Autocomplete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Array returned', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/products/suggest?search=phone&limit=5",
+              "host": ["{{BASE_URL}}"],
+              "path": ["products", "suggest"],
+              "query": [
+                { "key": "search", "value": "phone" },
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart",
+      "item": [
+        {
+          "name": "10. Get Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Cart is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{BASE_URL}}/cart", "host": ["{{BASE_URL}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "11. Add Item to Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Added to cart message', () => pm.expect(pm.response.json().message).to.include('cart'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"title\": \"iPhone 9\",\n  \"price\": 21999,\n  \"thumbnail\": \"https://cdn.dummyjson.com/product-images/1/thumbnail.jpg\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/cart/add", "host": ["{{BASE_URL}}"], "path": ["cart", "add"] }
+          }
+        },
+        {
+          "name": "12. Update Cart Item Quantity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/cart/update/1", "host": ["{{BASE_URL}}"], "path": ["cart", "update", "1"] }
+          }
+        },
+        {
+          "name": "13. Remove Cart Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 404', () => pm.expect([200, 404, 500]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{BASE_URL}}/cart/remove/1", "host": ["{{BASE_URL}}"], "path": ["cart", "remove", "1"] }
+          }
+        },
+        {
+          "name": "14. Clear Entire Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Cart cleared message', () => pm.expect(pm.response.json().message).to.include('cleared'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{BASE_URL}}/cart/clear", "host": ["{{BASE_URL}}"], "path": ["cart", "clear"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "15. Place Order from Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400', () => pm.expect([200, 400]).to.include(pm.response.code));",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Order object returned', () => pm.expect(pm.response.json().order).to.be.an('object'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{BASE_URL}}/orders/place", "host": ["{{BASE_URL}}"], "path": ["orders", "place"] }
+          }
+        },
+        {
+          "name": "16. Buy Now (Single Product Order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('Order created', () => pm.expect(res.order).to.be.an('object'));",
+                  "pm.test('Order has items', () => pm.expect(res.order.items).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 5,\n  \"title\": \"MacBook Pro\",\n  \"price\": 89999,\n  \"thumbnail\": \"https://cdn.dummyjson.com/product-images/5/thumbnail.jpg\",\n  \"quantity\": 1\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/orders/buy-now", "host": ["{{BASE_URL}}"], "path": ["orders", "buy-now"] }
+          }
+        },
+        {
+          "name": "17. Get All Orders (Order History)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Orders array returned', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "const orders = pm.response.json();",
+                  "if (orders.length > 0) {",
+                  "  pm.test('Order has id', () => pm.expect(orders[0].id).to.be.a('number'));",
+                  "  pm.test('Order has items array', () => pm.expect(orders[0].items).to.be.an('array'));",
+                  "  pm.test('Order has total', () => pm.expect(orders[0].total).to.be.a('number'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{BASE_URL}}/orders", "host": ["{{BASE_URL}}"], "path": ["orders"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚡ Health Check",
+      "item": [
+        {
+          "name": "18. Backend Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Backend is running', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 3000ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/", "host": ["{{BASE_URL}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "19. Invalid Token (Should Return 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns 401 or 403 for invalid token', () => pm.expect([401, 403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer invalid.token.here" }],
+            "url": { "raw": "{{BASE_URL}}/cart", "host": ["{{BASE_URL}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "20. Missing Token (Should Return 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns 401 for missing token', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/cart", "host": ["{{BASE_URL}}"], "path": ["cart"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { useTheme } from "./ThemeContext";
 import { getSearchSuggestions } from "./services/productService";
+import { Link } from "react-router-dom";
 import {
   SearchIcon,
   CartIcon,
   PackageIcon,
   SettingsIcon,
   LogOutIcon,
+  SunIcon,
+  MoonIcon,
 } from "./components/Icons";
 
 export default function Navbar() {
@@ -16,6 +20,7 @@ export default function Navbar() {
   const profileRef = useRef(null);
 
   const { totalItems } = useCart();
+  const { isDark, toggleTheme } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -23,22 +28,35 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("user");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
   });
 
+  // Sync user across tabs / after login
   useEffect(() => {
-    const checkUser = () => {
-      const saved = localStorage.getItem("user");
-      setUser(saved ? JSON.parse(saved) : null);
+    const syncUser = () => {
+      try {
+        const saved = localStorage.getItem("user");
+        setUser(saved ? JSON.parse(saved) : null);
+      } catch (e) {
+        setUser(null);
+      }
     };
-    window.addEventListener("storage", checkUser);
-    return () => window.removeEventListener("storage", checkUser);
+    window.addEventListener("storage", syncUser);
+    return () => window.removeEventListener("storage", syncUser);
   }, []);
 
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handler = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target)
+      ) {
         setShowDropdown(false);
       }
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -49,6 +67,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Live search suggestions with debounce
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -71,7 +90,6 @@ export default function Navbar() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
-
     navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
     setShowDropdown(false);
     setSearchTerm("");
@@ -101,7 +119,11 @@ export default function Navbar() {
     <>
       <nav className="navbar">
         {/* BRAND LOGO */}
-        <div className="brand" onClick={() => navigate("/")} title="OS Store Home">
+        <div
+          className="brand"
+          onClick={() => navigate("/")}
+          title="OS Store Home"
+        >
           <span className="brand-dot" />
           <span>OS STORE</span>
           <span className="brand-tag">v3.0</span>
@@ -142,7 +164,9 @@ export default function Navbar() {
                   />
                   <div className="nav-suggestion-info">
                     <div className="nav-suggestion-title">{prod.title}</div>
-                    <div className="nav-suggestion-price">₹{prod.price.toLocaleString("en-IN")}</div>
+                    <div className="nav-suggestion-price">
+                      ₹{prod.price.toLocaleString("en-IN")}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -152,7 +176,7 @@ export default function Navbar() {
 
         {/* RIGHT ACTIONS */}
         <div className="nav-right">
-          {/* Orders Link */}
+          {/* Orders Link (signed in only) */}
           {user && (
             <button
               className="nav-icon-btn"
@@ -164,7 +188,7 @@ export default function Navbar() {
             </button>
           )}
 
-          {/* Cart Icon with Counter */}
+          {/* Cart */}
           <button
             className="nav-icon-btn"
             onClick={() => navigate("/cart")}
@@ -172,20 +196,40 @@ export default function Navbar() {
             aria-label="Shopping Cart"
           >
             <CartIcon size={18} />
-            {totalItems > 0 && <span className="nav-badge">{totalItems}</span>}
+            {totalItems > 0 && (
+              <span className="nav-badge">{totalItems}</span>
+            )}
           </button>
 
+          {/* Theme Toggle — shown for EVERYONE; in Settings too for logged-in users */}
+          <button
+            className="nav-icon-btn"
+            onClick={toggleTheme}
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Theme"
+          >
+            {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+          </button>
+
+          {/* Not signed in → Sign In / Sign Up buttons */}
           {!user && (
             <>
-              <button className="nav-btn nav-login-btn" onClick={() => navigate("/login")}>
+              <button
+                className="nav-btn nav-login-btn"
+                onClick={() => navigate("/login")}
+              >
                 Sign In
               </button>
-              <button className="nav-btn nav-signup-btn" onClick={() => navigate("/signup")}>
+              <button
+                className="nav-btn nav-signup-btn"
+                onClick={() => navigate("/signup")}
+              >
                 Sign Up
               </button>
             </>
           )}
 
+          {/* Signed in → Avatar dropdown */}
           {user && (
             <div className="nav-profile" ref={profileRef}>
               <div
@@ -211,7 +255,7 @@ export default function Navbar() {
                     }}
                   >
                     <SettingsIcon size={16} />
-                    <span>Settings & Profile</span>
+                    <span>Settings &amp; Profile</span>
                   </button>
 
                   <button
@@ -239,13 +283,15 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* SUB-BAR CATEGORIES */}
+      {/* CATEGORY SUB-BAR */}
       <div className="nav-subbar">
         {categories.map((c, i) => (
           <Link
             key={i}
             to={c.path}
-            className={`nav-sub-item ${c.path.includes("discount") ? "deal-highlight" : ""}`}
+            className={`nav-sub-item ${
+              c.path.includes("discount") ? "deal-highlight" : ""
+            }`}
           >
             {c.label}
           </Link>

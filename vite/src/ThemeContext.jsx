@@ -13,14 +13,12 @@ export function useTheme() {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("os-theme");
+    // If user has previously set a preference, honour it
     if (savedTheme === "light" || savedTheme === "dark") {
       return savedTheme;
     }
-    // Check system preference
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
-      return "light";
-    }
-    return "dark"; // Default to dark aesthetic
+    // First-time visitor: default is always LIGHT
+    return "light";
   });
 
   useEffect(() => {

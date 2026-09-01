@@ -9,82 +9,119 @@ import {
   ClockIcon,
 } from "./components/Icons";
 
+// Sample orders defined OUTSIDE component so they are always stable
+const SAMPLE_ORDERS = [
+  {
+    id: "ORD-948210",
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    total: 54999,
+    status: "Shipped",
+    items: [
+      {
+        productId: 1,
+        title: "Flagship Ultrabook Pro Silicon",
+        quantity: 1,
+        price: 54999,
+        thumbnail:
+          "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80",
+      },
+    ],
+  },
+  {
+    id: "ORD-832104",
+    createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    total: 4499,
+    status: "Delivered",
+    items: [
+      {
+        productId: 2,
+        title: "Noise-Cancelling Studio Headset",
+        quantity: 1,
+        price: 4499,
+        thumbnail:
+          "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=400&q=80",
+      },
+    ],
+  },
+];
+
 export default function OrderHistory() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const defaultSampleOrders = [
-    {
-      id: "ORD-948210",
-      createdAt: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 day ago
-      total: 54999,
-      items: [
-        {
-          productId: 1,
-          title: "Flagship Ultrabook Pro Silicon",
-          quantity: 1,
-          price: 54999,
-          thumbnail:
-            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80",
-        },
-      ],
-    },
-    {
-      id: "ORD-832104",
-      createdAt: new Date(Date.now() - 86400000 * 6).toISOString(), // 6 days ago -> passed -> Delivered
-      total: 4499,
-      items: [
-        {
-          productId: 2,
-          title: "Noise-Cancelling Studio Headset",
-          quantity: 1,
-          price: 4499,
-          thumbnail:
-            "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=400&q=80",
-        },
-      ],
-    },
-  ];
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     setLoading(true);
-    const stored = JSON.parse(localStorage.getItem("user_orders") || "[]");
+    setError(null);
 
-    api
-      .get("/orders", { timeout: 2500 })
-      .then((res) => {
-        const backendOrders = res.data || [];
-        const combined = [...stored, ...backendOrders];
-        setOrders(combined.length > 0 ? combined : defaultSampleOrders);
-        setLoading(false);
-      })
-      .catch(() => {
-        setOrders(stored.length > 0 ? stored : defaultSampleOrders);
-        setLoading(false);
-      });
+    // Load from localStorage immediately for instant render
+    let storedOrders = [];
+    try {
+      storedOrders = JSON.parse(localStorage.getItem("user_orders") || "[]");
+    } catch (e) {
+      storedOrders = [];
+    }
+
+    // Show stored/sample orders instantly while fetching backend
+    if (isMounted) {
+      setOrders(storedOrders.length > 0 ? storedOrders : SAMPLE_ORDERS);
+      setLoading(false);
+    }
+
+    // Then try to enrich with backend orders (silently)
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      api
+        .get("/orders", { timeout: 4000 })
+        .then((res) => {
+          if (!isMounted) return;
+          const backendOrders = Array.isArray(res.data) ? res.data : [];
+          if (backendOrders.length > 0) {
+            // Normalise Prisma shape: items can be inside 'orderItems' or 'items'
+            const normalised = backendOrders.map((o) => ({
+              ...o,
+              items: o.items || o.orderItems || [],
+            }));
+            // Merge with local orders (avoid duplicates by id)
+            const merged = [
+              ...normalised,
+              ...storedOrders.filter(
+                (s) => !normalised.find((n) => n.id === s.id)
+              ),
+            ];
+            setOrders(merged.length > 0 ? merged : SAMPLE_ORDERS);
+          }
+        })
+        .catch(() => {
+          // Silently fail — we already show local orders
+        });
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Compute status and delivery expectations
-  const computeOrderStatusInfo = (order) => {
+  // Derive live status from createdAt timestamp (3-day delivery cycle)
+  const computeOrderInfo = (order) => {
     const createdTime = new Date(order.createdAt || Date.now()).getTime();
-    // Expected delivery is 3 days from placement
-    const expectedDeliveryTime = createdTime + 3 * 24 * 60 * 60 * 1000;
+    const deliveryTime = createdTime + 3 * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const elapsedHours = (now - createdTime) / (1000 * 60 * 60);
 
-    const deliveryDateObj = new Date(expectedDeliveryTime);
-    const deliveryDateStr = deliveryDateObj.toLocaleDateString("en-US", {
+    const deliveryDateStr = new Date(deliveryTime).toLocaleDateString("en-IN", {
       weekday: "long",
       month: "short",
       day: "numeric",
       year: "numeric",
     });
 
-    let currentStatus = "Order Confirmed";
-    let stepIndex = 0; // 0: Ordered, 1: Shipped, 2: Out for Delivery, 3: Delivered
+    let currentStatus;
+    let stepIndex;
 
-    if (now >= expectedDeliveryTime) {
+    if (now >= deliveryTime) {
       currentStatus = "Delivered";
       stepIndex = 3;
     } else if (elapsedHours >= 36) {
@@ -98,26 +135,39 @@ export default function OrderHistory() {
       stepIndex = 0;
     }
 
-    return {
-      currentStatus,
-      stepIndex,
-      isDelivered: now >= expectedDeliveryTime,
-      deliveryDateStr,
-    };
+    const isDelivered = now >= deliveryTime;
+    return { currentStatus, stepIndex, isDelivered, deliveryDateStr };
   };
 
-  const getStepClass = (currentStepIndex, stepNumber) => {
-    if (stepNumber < currentStepIndex) return "done";
-    if (stepNumber === currentStepIndex) return "current";
+  const stepClass = (current, step) => {
+    if (step < current) return "done";
+    if (step === current) return "current";
     return "";
   };
 
   if (loading) {
     return (
       <div className="orders-page">
-        <h1 className="orders-title">Orders & Shipment Tracking</h1>
+        <h1 className="orders-title">Orders &amp; Shipment Tracking</h1>
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px", marginBottom: "20px" }} />
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px" }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="orders-page">
+        <h1 className="orders-title">Orders &amp; Shipment Tracking</h1>
+        <div className="orders-empty">
+          <h2>Unable to Load Orders</h2>
+          <p style={{ color: "var(--text-muted)", marginTop: "8px", marginBottom: "20px" }}>
+            {error}
+          </p>
+          <button className="cta-primary" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -133,12 +183,12 @@ export default function OrderHistory() {
         }}
       >
         <h1 className="orders-title" style={{ margin: 0 }}>
-          Orders & Live Tracking
+          Orders &amp; Live Tracking
         </h1>
         <Link
           to="/products"
           className="cta-secondary"
-          style={{ padding: "8px 16px", fontSize: "0.88rem" }}
+          style={{ padding: "8px 16px", fontSize: "0.88rem", display: "inline-flex", alignItems: "center", gap: "6px" }}
         >
           <span>New Order</span>
           <ArrowRightIcon size={14} />
@@ -148,7 +198,9 @@ export default function OrderHistory() {
       {orders.length === 0 ? (
         <div className="orders-empty">
           <h2>No orders placed yet</h2>
-          <p>When you place an order, its live tracking status will appear here.</p>
+          <p style={{ color: "var(--text-muted)", margin: "10px 0 24px" }}>
+            When you place an order, its live tracking status will appear here.
+          </p>
           <Link to="/products" className="cta-primary">
             Start Shopping
           </Link>
@@ -156,18 +208,20 @@ export default function OrderHistory() {
       ) : (
         <div>
           {orders.map((order) => {
-            const orderDateStr = new Date(order.createdAt).toLocaleDateString("en-US", {
+            const orderDateStr = new Date(order.createdAt).toLocaleDateString("en-IN", {
               month: "short",
               day: "numeric",
               year: "numeric",
             });
 
             const { currentStatus, stepIndex, isDelivered, deliveryDateStr } =
-              computeOrderStatusInfo(order);
+              computeOrderInfo(order);
+
+            const orderItems = order.items || order.orderItems || [];
 
             return (
               <div key={order.id} className="order-card">
-                {/* Order Header */}
+                {/* Header */}
                 <div className="order-head">
                   <div>
                     <span className="order-id-title">Order #{order.id}</span>
@@ -177,7 +231,7 @@ export default function OrderHistory() {
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                     <button
                       onClick={() =>
-                        alert(`Official tax invoice downloaded for Order #${order.id}`)
+                        alert(`Invoice for Order #${order.id} will be emailed to your registered address.`)
                       }
                       style={{
                         padding: "6px 14px",
@@ -186,14 +240,19 @@ export default function OrderHistory() {
                         fontSize: "0.82rem",
                         color: "var(--text-muted)",
                         fontWeight: 600,
+                        cursor: "pointer",
                       }}
                     >
                       Download Invoice
                     </button>
                     <span
                       style={{
-                        background: isDelivered ? "rgba(16, 185, 129, 0.15)" : "var(--chip-bg)",
-                        color: isDelivered ? "var(--brand-accent)" : "var(--brand-primary)",
+                        background: isDelivered
+                          ? "rgba(16, 185, 129, 0.15)"
+                          : "var(--chip-bg)",
+                        color: isDelivered
+                          ? "var(--brand-accent)"
+                          : "var(--brand-primary)",
                         fontWeight: 800,
                         fontSize: "0.82rem",
                         padding: "6px 12px",
@@ -230,12 +289,14 @@ export default function OrderHistory() {
                         </>
                       ) : (
                         <>
-                          Estimated Delivery: <strong>{deliveryDateStr}</strong> (On Schedule)
+                          Estimated Delivery: <strong>{deliveryDateStr}</strong>{" "}
+                          <span style={{ color: "var(--brand-accent)", fontWeight: 700 }}>
+                            (On Schedule)
+                          </span>
                         </>
                       )}
                     </span>
                   </div>
-
                   <span
                     style={{
                       color: isDelivered ? "var(--brand-accent)" : "var(--brand-primary)",
@@ -249,50 +310,43 @@ export default function OrderHistory() {
 
                 {/* Tracking Stepper */}
                 <div className="order-tracking-stepper">
-                  <div className={`track-step ${getStepClass(stepIndex, 0)}`}>
-                    <div className="track-step-dot">
-                      <CheckIcon size={14} />
+                  {[
+                    { label: "Ordered", icon: <CheckIcon size={13} /> },
+                    { label: "Shipped", icon: <CheckIcon size={13} /> },
+                    { label: "Out for Delivery", icon: <TruckIcon size={13} /> },
+                    { label: "Delivered", icon: <PackageIcon size={13} /> },
+                  ].map((step, idx) => (
+                    <div key={idx} className={`track-step ${stepClass(stepIndex, idx)}`}>
+                      <div className="track-step-dot">{step.icon}</div>
+                      <span className="track-step-label">{step.label}</span>
                     </div>
-                    <span className="track-step-label">Ordered</span>
-                  </div>
-                  <div className={`track-step ${getStepClass(stepIndex, 1)}`}>
-                    <div className="track-step-dot">
-                      <CheckIcon size={14} />
-                    </div>
-                    <span className="track-step-label">Shipped</span>
-                  </div>
-                  <div className={`track-step ${getStepClass(stepIndex, 2)}`}>
-                    <div className="track-step-dot">
-                      <TruckIcon size={14} />
-                    </div>
-                    <span className="track-step-label">Out for Delivery</span>
-                  </div>
-                  <div className={`track-step ${getStepClass(stepIndex, 3)}`}>
-                    <div className="track-step-dot">
-                      <PackageIcon size={14} />
-                    </div>
-                    <span className="track-step-label">Delivered</span>
-                  </div>
+                  ))}
                 </div>
 
                 {/* Order Items */}
                 <div className="order-items-list">
-                  {order.items?.map((item, idx) => (
+                  {orderItems.map((item, idx) => (
                     <div key={idx} className="order-item-row">
-                      <img src={item.thumbnail} alt={item.title} />
+                      <img
+                        src={item.thumbnail || "https://via.placeholder.com/56"}
+                        alt={item.title}
+                      />
                       <div style={{ flex: 1 }}>
                         <div className="order-item-title">{item.title}</div>
                         <div className="order-item-meta">
-                          Qty: {item.quantity || 1} • Unit Price: ₹
-                          {Number(item.price).toLocaleString("en-IN")}
+                          Qty: {item.quantity || 1} &bull; Unit Price: ₹
+                          {Number(item.price || 0).toLocaleString("en-IN")}
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate(`/product/${item.productId || 1}`)}
+                        onClick={() =>
+                          navigate(`/product/${item.productId || 1}`)
+                        }
                         style={{
                           fontSize: "0.82rem",
                           color: "var(--brand-primary)",
                           fontWeight: 700,
+                          cursor: "pointer",
                         }}
                       >
                         Buy Again
@@ -301,10 +355,10 @@ export default function OrderHistory() {
                   ))}
                 </div>
 
-                {/* Footer Total */}
+                {/* Footer */}
                 <div className="order-footer-row">
                   <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                    Courier Tracking #OS-IN-{(order.id || "").replace(/\D/g, "")}
+                    Courier Tracking: OS-IN-{String(order.id || "").replace(/\D/g, "")}
                   </span>
                   <div className="order-total-badge">
                     Total: ₹{Number(order.total || 0).toLocaleString("en-IN")}
