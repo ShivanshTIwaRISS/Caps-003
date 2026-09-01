@@ -83,13 +83,13 @@ export default function Home() {
       <section className="neo-hero">
         <div className="neo-hero-left">
           <span className="hero-kicker">
-            <SparklesIcon size={14} /> Curated Next-Gen Catalog
+            <SparklesIcon size={14} /> India's Favourite Online Store
           </span>
           <h1>
-            Precision Engineered <span>Electronics & Hardware</span>
+            Everything You Need, <span>All in One Place</span>
           </h1>
           <p className="hero-sub">
-            Discover verified flagship hardware, ultrabooks, smartphones, and luxury accessories with same-day dispatch and comprehensive manufacturer warranty.
+            From flagship smartphones and laptops to fresh groceries, luxury fragrances, fashion, footwear, and home essentials — shop across 10+ categories with same-day dispatch and free returns.
           </p>
 
           <div className="hero-actions">
@@ -131,7 +131,7 @@ export default function Home() {
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80')",
             }}
-            onClick={() => navigate("/products?search=shoes")}
+            onClick={() => navigate("/products?category=footwear")}
             role="button"
           >
             <div className="neo-tile-overlay" />
@@ -315,8 +315,8 @@ export default function Home() {
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ color: "var(--brand-warning)" }}><SparklesIcon size={28} /></div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>100% Genuine Gear</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Direct brand warranty support</div>
+            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>100% Authentic Products</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Verified sellers across all categories</div>
           </div>
         </div>
       </section>
@@ -332,13 +332,13 @@ export default function Home() {
         }}
       >
         <h2 style={{ fontSize: "2.2rem", fontWeight: 800, marginBottom: "10px" }}>
-          Upgrade Your Hardware Today
+          Start Shopping Across Categories
         </h2>
         <p style={{ color: "var(--text-muted)", maxWidth: "550px", margin: "0 auto 24px" }}>
-          Join thousands of professionals and developers who trust OS Store for certified, genuine electronics.
+          Join millions of happy customers who shop smartphones, groceries, fashion, fragrances, laptops, footwear, and more on OS Store — all delivered to your door.
         </p>
         <Link to="/products" className="cta-primary">
-          <span>Browse All Hardware</span>
+          <span>Browse All Categories</span>
           <ArrowRightIcon size={16} />
         </Link>
       </section>

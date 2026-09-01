@@ -1181,6 +1181,44 @@ input, select, textarea {
   color: #fff;
 }
 
+/* Product card dual-action row */
+.product-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  align-items: stretch;
+}
+
+.product-card-actions .product-cart-btn {
+  margin-top: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.product-view-btn {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--panel-border);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.product-view-btn:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  background: var(--chip-bg);
+}
+
 /* ==========================================================================
    PRODUCTS CATALOG
    ========================================================================== */
@@ -2776,12 +2814,23 @@ input, select, textarea {
     font-size: 0.74rem !important;
     border-radius: 8px !important;
     gap: 4px !important;
-    width: 100% !important;
+    width: auto !important;
   }
 
   .product-cart-btn svg {
     width: 13px !important;
     height: 13px !important;
+  }
+
+  .product-card-actions {
+    gap: 4px !important;
+    margin-top: 6px !important;
+  }
+
+  .product-view-btn {
+    padding: 7px 8px !important;
+    font-size: 0.72rem !important;
+    border-radius: 8px !important;
   }
 
   /* PRODUCTS CATALOG PAGE FILTERS ON MOBILE */

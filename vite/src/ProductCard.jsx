@@ -122,37 +122,50 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Cart Action Button */}
-        {!isInCart ? (
+        {/* Action Buttons Row */}
+        <div className="product-card-actions">
+          {!isInCart ? (
+            <button
+              className="product-cart-btn"
+              onClick={handleAddToCart}
+              style={addedAnim ? { background: "var(--brand-accent)", color: "#fff" } : {}}
+            >
+              {addedAnim ? (
+                <>
+                  <CheckIcon size={16} />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <CartIcon size={16} />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              className="product-cart-btn in-cart"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/cart");
+              }}
+            >
+              <CheckIcon size={16} />
+              <span>In Cart</span>
+            </button>
+          )}
+
           <button
-            className="product-cart-btn"
-            onClick={handleAddToCart}
-            style={addedAnim ? { background: "var(--brand-accent)", color: "#fff" } : {}}
-          >
-            {addedAnim ? (
-              <>
-                <CheckIcon size={16} />
-                <span>Added to Cart</span>
-              </>
-            ) : (
-              <>
-                <CartIcon size={16} />
-                <span>Add to Cart</span>
-              </>
-            )}
-          </button>
-        ) : (
-          <button
-            className="product-cart-btn in-cart"
+            className="product-view-btn"
             onClick={(e) => {
               e.stopPropagation();
-              navigate("/cart");
+              navigate(`/product/${product.id}`);
             }}
+            title="View full product details"
           >
-            <CheckIcon size={16} />
-            <span>In Cart — View</span>
+            <span>Details</span>
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
