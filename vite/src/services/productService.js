@@ -96,6 +96,35 @@ function enhanceProduct(item) {
     returnPolicy: item.returnPolicy || "7 Days Replacement & Refund Guarantee",
   };
 }
+function applyFilters(items, { rating, price, sort }) {
+  let result = [...items];
+
+  // Rating filter
+  if (rating) result = result.filter((p) => p.rating >= Number(rating));
+
+  // Price range filters (mutually exclusive with sort-by-price)
+  if (price === "under-500") {
+    result = result.filter((p) => p.price < 500);
+  } else if (price === "500-2000") {
+    result = result.filter((p) => p.price >= 500 && p.price < 2000);
+  } else if (price === "2000-10000") {
+    result = result.filter((p) => p.price >= 2000 && p.price < 10000);
+  } else if (price === "10000-50000") {
+    result = result.filter((p) => p.price >= 10000 && p.price < 50000);
+  } else if (price === "high") {
+    result = result.filter((p) => p.price >= 50000);
+  }
+
+  // Sort
+  if (price === "low" || sort === "price-asc") result.sort((a, b) => a.price - b.price);
+  else if (sort === "price-desc") result.sort((a, b) => b.price - a.price);
+  else if (price === "high") result.sort((a, b) => b.price - a.price);
+
+  if (sort === "rating") result.sort((a, b) => b.rating - a.rating);
+  if (sort === "discount") result.sort((a, b) => b.discountPercentage - a.discountPercentage);
+
+  return result;
+}
 
 // Resilient product fetcher with 2-second timeout fallback
 export async function getProducts({
@@ -126,6 +155,7 @@ export async function getProducts({
 
   const skip = (page - 1) * limit;
 
+  // Always fetch from DummyJSON directly (backend may not support all filter params)
   const fetchDirect = async () => {
     let url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}`;
     if (search) {
@@ -139,28 +169,13 @@ export async function getProducts({
     const data = await res.json();
 
     let items = (data.products || []).map(enhanceProduct);
-
-    if (rating) items = items.filter((p) => p.rating >= Number(rating));
-
-    // Price range filtering
-    if (price === "low" || sort === "price-asc") items.sort((a, b) => a.price - b.price);
-    else if (price === "high") items = items.filter((p) => p.price >= 50000).sort((a, b) => b.price - a.price);
-    else if (price === "under-500") items = items.filter((p) => p.price < 500);
-    else if (price === "500-2000") items = items.filter((p) => p.price >= 500 && p.price < 2000);
-    else if (price === "2000-10000") items = items.filter((p) => p.price >= 2000 && p.price < 10000);
-    else if (price === "10000-50000") items = items.filter((p) => p.price >= 10000 && p.price < 50000);
-    else if (sort === "price-desc") items.sort((a, b) => b.price - a.price);
-    if (sort === "rating") items.sort((a, b) => b.rating - a.rating);
-    if (sort === "discount") items.sort((a, b) => b.discountPercentage - a.discountPercentage);
-
-    const total = data.total || items.length;
-    const totalPages = Math.ceil(total / limit) || 1;
+    items = applyFilters(items, { rating, price, sort });
 
     return {
       products: items,
-      total,
+      total: items.length,
       page: Number(page),
-      totalPages,
+      totalPages: Math.ceil(items.length / limit) || 1,
     };
   };
 
@@ -169,11 +184,14 @@ export async function getProducts({
       params: { page, limit, search, category, rating, price, sort },
       timeout: 2500,
     });
+    // Always re-apply client-side filters on backend results too
+    let items = (res.data.products || []).map(enhanceProduct);
+    items = applyFilters(items, { rating, price, sort });
     return {
-      products: (res.data.products || []).map(enhanceProduct),
-      total: res.data.total || 0,
+      products: items,
+      total: items.length,
       page: res.data.page || Number(page),
-      totalPages: res.data.totalPages || 1,
+      totalPages: Math.ceil(items.length / limit) || 1,
     };
   };
 
