@@ -1,26 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "./services/api";
+import {
+  PackageIcon,
+  TruckIcon,
+  CheckIcon,
+  ArrowRightIcon,
+} from "./components/Icons";
 
 export default function OrderHistory() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Realistic default order examples if none exist
   const defaultSampleOrders = [
     {
       id: "ORD-948210",
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      total: 12999,
+      total: 54999,
       status: "In Transit",
       items: [
         {
           productId: 1,
-          title: "iPhone 15 Pro Max - Titanium Cyber Edition",
+          title: "Flagship Ultrabook Pro Silicon",
           quantity: 1,
-          price: 12999,
-          thumbnail: "https://images.unsplash.com/photo-1511385348-a52b4a160dc2?auto=format&fit=crop&w=400&q=80",
+          price: 54999,
+          thumbnail: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80",
         },
       ],
     },
@@ -32,7 +37,7 @@ export default function OrderHistory() {
       items: [
         {
           productId: 2,
-          title: "Aura Noise-Cancelling Studio Headset",
+          title: "Noise-Cancelling Studio Headset",
           quantity: 1,
           price: 4499,
           thumbnail: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=400&q=80",
@@ -44,7 +49,6 @@ export default function OrderHistory() {
   useEffect(() => {
     setLoading(true);
 
-    // Read locally stored orders first
     const stored = JSON.parse(localStorage.getItem("user_orders") || "[]");
 
     api
@@ -56,14 +60,12 @@ export default function OrderHistory() {
         setLoading(false);
       })
       .catch(() => {
-        // Use stored orders or sample orders
         setOrders(stored.length > 0 ? stored : defaultSampleOrders);
         setLoading(false);
       });
   }, []);
 
   const getStepStatus = (orderStatus, stepIndex) => {
-    // 0: Placed, 1: Shipped, 2: In Transit, 3: Delivered
     const statusMap = {
       "Order Confirmed": 1,
       "In Transit": 2,
@@ -79,7 +81,7 @@ export default function OrderHistory() {
   if (loading) {
     return (
       <div className="orders-page">
-        <h1 className="orders-title">📦 Your Orders & Live Tracking</h1>
+        <h1 className="orders-title">Orders & Live Shipment Tracking</h1>
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px", marginBottom: "20px" }} />
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px" }} />
       </div>
@@ -88,12 +90,24 @@ export default function OrderHistory() {
 
   return (
     <div className="orders-page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "28px",
+        }}
+      >
         <h1 className="orders-title" style={{ margin: 0 }}>
-          📦 Your Orders & Live Tracking
+          Orders & Live Tracking
         </h1>
-        <Link to="/products" className="cta-secondary" style={{ padding: "8px 16px", fontSize: "0.88rem" }}>
-          + New Order
+        <Link
+          to="/products"
+          className="cta-secondary"
+          style={{ padding: "8px 16px", fontSize: "0.88rem" }}
+        >
+          <span>New Order</span>
+          <ArrowRightIcon size={14} />
         </Link>
       </div>
 
@@ -123,32 +137,39 @@ export default function OrderHistory() {
                     <div className="order-date-text">Placed on {dateStr}</div>
                   </div>
 
-                  <div style={{ display: "flex", gap: "10px" }}>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                     <button
-                      onClick={() => alert(`Downloading official PDF Invoice for Order #${order.id}...`)}
+                      onClick={() =>
+                        alert(`Official tax invoice downloaded for Order #${order.id}`)
+                      }
                       style={{
-                        padding: "6px 12px",
+                        padding: "6px 14px",
                         borderRadius: "8px",
                         border: "1px solid var(--panel-border)",
                         fontSize: "0.82rem",
                         color: "var(--text-muted)",
+                        fontWeight: 600,
                       }}
                     >
-                      📄 Invoice
+                      Download Invoice
                     </button>
                     <span
                       style={{
-                        background: order.status === "Delivered" ? "rgba(16, 185, 129, 0.15)" : "var(--chip-bg)",
-                        color: order.status === "Delivered" ? "var(--brand-accent)" : "var(--brand-primary)",
+                        background:
+                          order.status === "Delivered"
+                            ? "rgba(16, 185, 129, 0.15)"
+                            : "var(--chip-bg)",
+                        color:
+                          order.status === "Delivered"
+                            ? "var(--brand-accent)"
+                            : "var(--brand-primary)",
                         fontWeight: 800,
                         fontSize: "0.82rem",
                         padding: "6px 12px",
                         borderRadius: "8px",
-                        display: "flex",
-                        alignItems: "center",
                       }}
                     >
-                      ● {order.status || "Order Confirmed"}
+                      {order.status || "Order Confirmed"}
                     </span>
                   </div>
                 </div>
@@ -156,24 +177,32 @@ export default function OrderHistory() {
                 {/* Tracking Stepper */}
                 <div className="order-tracking-stepper">
                   <div className={`track-step ${getStepStatus(order.status, 0)}`}>
-                    <div className="track-step-dot">✓</div>
+                    <div className="track-step-dot">
+                      <CheckIcon size={14} />
+                    </div>
                     <span className="track-step-label">Ordered</span>
                   </div>
                   <div className={`track-step ${getStepStatus(order.status, 1)}`}>
-                    <div className="track-step-dot">✓</div>
+                    <div className="track-step-dot">
+                      <CheckIcon size={14} />
+                    </div>
                     <span className="track-step-label">Shipped</span>
                   </div>
                   <div className={`track-step ${getStepStatus(order.status, 2)}`}>
-                    <div className="track-step-dot">🚚</div>
+                    <div className="track-step-dot">
+                      <TruckIcon size={14} />
+                    </div>
                     <span className="track-step-label">In Transit</span>
                   </div>
                   <div className={`track-step ${getStepStatus(order.status, 3)}`}>
-                    <div className="track-step-dot">📦</div>
+                    <div className="track-step-dot">
+                      <PackageIcon size={14} />
+                    </div>
                     <span className="track-step-label">Delivered</span>
                   </div>
                 </div>
 
-                {/* Order Item Rows */}
+                {/* Order Items */}
                 <div className="order-items-list">
                   {order.items?.map((item, idx) => (
                     <div key={idx} className="order-item-row">
@@ -181,7 +210,8 @@ export default function OrderHistory() {
                       <div style={{ flex: 1 }}>
                         <div className="order-item-title">{item.title}</div>
                         <div className="order-item-meta">
-                          Quantity: {item.quantity || 1} • Unit Price: ₹{item.price}
+                          Qty: {item.quantity || 1} • Unit Price: ₹
+                          {Number(item.price).toLocaleString("en-IN")}
                         </div>
                       </div>
                       <button
@@ -198,13 +228,13 @@ export default function OrderHistory() {
                   ))}
                 </div>
 
-                {/* Footer Total */}
+                {/* Total */}
                 <div className="order-footer-row">
-                  <span style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
-                    Standard Express Courier Tracking #OS-IN-{(order.id || "").replace(/\D/g, "")}
+                  <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                    Standard Express Tracking #OS-IN-{(order.id || "").replace(/\D/g, "")}
                   </span>
                   <div className="order-total-badge">
-                    Total: ₹{Number(order.total || 0).toFixed(0)}
+                    Total: ₹{Number(order.total || 0).toLocaleString("en-IN")}
                   </div>
                 </div>
               </div>

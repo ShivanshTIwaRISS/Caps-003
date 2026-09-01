@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { StarIcon, CartIcon, CheckIcon } from "./components/Icons";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -35,7 +36,6 @@ export default function ProductCard({ product }) {
     setTimeout(() => setAddedAnim(false), 1200);
   };
 
-  // Generate dynamic estimated delivery date (2 days from now)
   const getDeliveryDate = () => {
     const d = new Date();
     d.setDate(d.getDate() + 2);
@@ -60,31 +60,37 @@ export default function ProductCard({ product }) {
 
         {product.rating >= 4.4 && (
           <span className="product-top-badge">
-            ⭐ {product.rating} Top Rated
+            <StarIcon size={12} filled={true} />
+            <span>{product.rating} Top Rated</span>
           </span>
         )}
       </div>
 
       <div className="product-info">
-        <span className="product-category-tag">{product.category || "Gadgets"}</span>
+        <span className="product-category-tag">{product.category || "Hardware"}</span>
         <h3 className="product-title" title={product.title}>
           {product.title}
         </h3>
 
         <div className="product-rating-row">
-          <span className="rating-stars">
-            {"★".repeat(Math.round(product.rating || 4))}
-            <span style={{ opacity: 0.35 }}>
-              {"★".repeat(5 - Math.round(product.rating || 4))}
-            </span>
-          </span>
+          <div className="rating-stars">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <StarIcon
+                key={i}
+                size={14}
+                filled={i < Math.round(product.rating || 4)}
+              />
+            ))}
+          </div>
           <span className="rating-count">({product.reviewsCount || 48})</span>
         </div>
 
         <div className="product-price-row">
-          <span className="product-price">₹{product.price}</span>
+          <span className="product-price">₹{product.price.toLocaleString("en-IN")}</span>
           {product.originalPrice && (
-            <span className="product-orig-price">₹{product.originalPrice}</span>
+            <span className="product-orig-price">
+              ₹{product.originalPrice.toLocaleString("en-IN")}
+            </span>
           )}
         </div>
 
@@ -99,7 +105,17 @@ export default function ProductCard({ product }) {
             onClick={handleAddToCart}
             style={addedAnim ? { background: "var(--brand-accent)", color: "#fff" } : {}}
           >
-            {addedAnim ? "✓ Added to Cart!" : "🛒 Add to Cart"}
+            {addedAnim ? (
+              <>
+                <CheckIcon size={16} />
+                <span>Added to Cart</span>
+              </>
+            ) : (
+              <>
+                <CartIcon size={16} />
+                <span>Add to Cart</span>
+              </>
+            )}
           </button>
         ) : (
           <button
@@ -109,7 +125,8 @@ export default function ProductCard({ product }) {
               navigate("/cart");
             }}
           >
-            ✓ In Cart — View
+            <CheckIcon size={16} />
+            <span>In Cart — View</span>
           </button>
         )}
       </div>

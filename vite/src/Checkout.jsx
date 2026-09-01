@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "./CartContext";
 import api from "./services/api";
+import {
+  CreditCardIcon,
+  SmartphoneIcon,
+  CashIcon,
+  CheckIcon,
+  PackageIcon,
+  CloseIcon,
+  ShieldIcon,
+} from "./components/Icons";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -12,6 +21,9 @@ export default function Checkout() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // COD confirmation modal state
+  const [showCodModal, setShowCodModal] = useState(false);
 
   // Address state
   const [address, setAddress] = useState({
@@ -32,9 +44,7 @@ export default function Checkout() {
     cvv: "•••",
   });
   const [upiId, setUpiId] = useState("user@okaxis");
-  const [confirmCod, setConfirmCod] = useState(false);
 
-  // Promo discount from cart
   const [discountInfo, setDiscountInfo] = useState({ amount: 0, promo: "" });
 
   useEffect(() => {
@@ -64,16 +74,24 @@ export default function Checkout() {
   const itemsTotal = mode === "buyNow" ? buyNowProduct?.price || 0 : totalPrice;
   const grandTotal = Math.max(0, itemsTotal - discountInfo.amount);
 
-  const handlePlaceOrder = async () => {
+  const handleInitiateOrder = () => {
     if (!isAddressValid) {
-      alert("Please enter a complete shipping address.");
+      alert("Please enter a valid and complete shipping address.");
       return;
     }
 
+    if (paymentMethod === "cod") {
+      setShowCodModal(true);
+    } else {
+      executeOrderPlacement();
+    }
+  };
+
+  const executeOrderPlacement = async () => {
     setLoading(true);
+    setShowCodModal(false);
     const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
 
-    // Prepare realistic order object
     const orderData = {
       id: newOrderId,
       createdAt: new Date().toISOString(),
@@ -91,7 +109,6 @@ export default function Checkout() {
     };
 
     try {
-      // Attempt backend order placement
       if (mode === "buyNow") {
         await api.post("/orders/buy-now", {
           productId: buyNowProduct.productId || buyNowProduct.id,
@@ -108,10 +125,9 @@ export default function Checkout() {
         clearCart();
       }
     } catch (e) {
-      console.warn("Backend order sync fallback:", e);
+      console.warn("Backend order placement fallback:", e);
     }
 
-    // Save to local orders array for instant reflection
     const existingOrders = JSON.parse(localStorage.getItem("user_orders") || "[]");
     localStorage.setItem("user_orders", JSON.stringify([orderData, ...existingOrders]));
     localStorage.removeItem("cartDiscount");
@@ -121,15 +137,16 @@ export default function Checkout() {
     setLoading(false);
   };
 
-  // SUCCESS CONFIRMATION SCREEN
   if (orderPlaced) {
     return (
       <div className="checkout-page">
         <div className="checkout-success-card">
-          <div className="success-icon-wrap">🎉</div>
-          <h2>Order Placed Successfully!</h2>
+          <div className="success-icon-wrap">
+            <CheckIcon size={36} />
+          </div>
+          <h2>Order Placed Successfully</h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-            Thank you for your purchase. We've sent an order confirmation to your registered email.
+            Thank you for your purchase. An order confirmation with invoice has been sent to your email.
           </p>
 
           <div className="order-id-badge">Order ID: #{placedOrderId}</div>
@@ -139,29 +156,30 @@ export default function Checkout() {
               background: "var(--bg-subtle)",
               border: "1px solid var(--panel-border)",
               borderRadius: "14px",
-              padding: "16px",
+              padding: "18px",
               marginBottom: "24px",
               textAlign: "left",
               fontSize: "0.88rem",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ color: "var(--text-muted)" }}>Estimated Delivery:</span>
-              <strong style={{ color: "var(--brand-accent)" }}>Within 2–3 Days</strong>
+              <strong style={{ color: "var(--brand-accent)" }}>Within 2–3 Business Days</strong>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ color: "var(--text-muted)" }}>Payment Method:</span>
               <strong style={{ textTransform: "uppercase" }}>{paymentMethod}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>Total Paid:</span>
-              <strong>₹{grandTotal.toFixed(0)}</strong>
+              <span style={{ color: "var(--text-muted)" }}>Total Paid / Due:</span>
+              <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
             </div>
           </div>
 
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
             <Link to="/orders" className="cta-primary">
-              📦 Track Your Order
+              <PackageIcon size={16} />
+              <span>Track Your Order</span>
             </Link>
             <Link to="/products" className="cta-secondary">
               Continue Shopping
@@ -175,11 +193,11 @@ export default function Checkout() {
   return (
     <div className="checkout-page">
       <h1 className="checkout-title">
-        {mode === "buyNow" ? "⚡ Express Checkout" : "🛍️ Checkout"}
+        {mode === "buyNow" ? "Express Checkout" : "Checkout & Payment"}
       </h1>
 
       <div className="checkout-grid">
-        {/* LEFT COLUMN — STEPS */}
+        {/* LEFT COLUMN */}
         <div>
           {/* STEP 1: SHIPPING ADDRESS */}
           <div className="checkout-section-card">
@@ -193,7 +211,7 @@ export default function Checkout() {
                 <label>Full Name</label>
                 <input
                   name="name"
-                  placeholder="e.g. John Doe"
+                  placeholder="Full Name"
                   value={address.name}
                   onChange={handleAddressChange}
                 />
@@ -203,7 +221,7 @@ export default function Checkout() {
                 <label>Street Address / Apartment</label>
                 <input
                   name="street"
-                  placeholder="Flat 402, Green Valley Apts"
+                  placeholder="Street Address"
                   value={address.street}
                   onChange={handleAddressChange}
                 />
@@ -213,7 +231,7 @@ export default function Checkout() {
                 <label>City</label>
                 <input
                   name="city"
-                  placeholder="Bengaluru"
+                  placeholder="City"
                   value={address.city}
                   onChange={handleAddressChange}
                 />
@@ -223,7 +241,7 @@ export default function Checkout() {
                 <label>ZIP / Pincode</label>
                 <input
                   name="zip"
-                  placeholder="560001"
+                  placeholder="Pincode"
                   value={address.zip}
                   onChange={handleAddressChange}
                 />
@@ -233,7 +251,7 @@ export default function Checkout() {
                 <label>Contact Phone</label>
                 <input
                   name="phone"
-                  placeholder="+91 98765 43210"
+                  placeholder="Phone Number"
                   value={address.phone}
                   onChange={handleAddressChange}
                 />
@@ -245,7 +263,7 @@ export default function Checkout() {
           <div className="checkout-section-card">
             <div className="checkout-section-title">
               <span className="checkout-step-num">2</span>
-              <span>Payment Option</span>
+              <span>Payment Method</span>
             </div>
 
             <div className="payment-methods-grid">
@@ -253,31 +271,31 @@ export default function Checkout() {
                 className={`payment-method-card ${paymentMethod === "upi" ? "active" : ""}`}
                 onClick={() => setPaymentMethod("upi")}
               >
-                <div className="payment-method-icon">📱</div>
-                <div className="payment-method-name">UPI / QR</div>
+                <SmartphoneIcon size={24} />
+                <span className="payment-method-name">UPI / QR</span>
               </div>
 
               <div
                 className={`payment-method-card ${paymentMethod === "card" ? "active" : ""}`}
                 onClick={() => setPaymentMethod("card")}
               >
-                <div className="payment-method-icon">💳</div>
-                <div className="payment-method-name">Credit/Debit Card</div>
+                <CreditCardIcon size={24} />
+                <span className="payment-method-name">Credit / Debit Card</span>
               </div>
 
               <div
                 className={`payment-method-card ${paymentMethod === "cod" ? "active" : ""}`}
                 onClick={() => setPaymentMethod("cod")}
               >
-                <div className="payment-method-icon">💵</div>
-                <div className="payment-method-name">Cash on Delivery</div>
+                <CashIcon size={24} />
+                <span className="payment-method-name">Cash on Delivery</span>
               </div>
             </div>
 
-            {/* UPI Option */}
+            {/* UPI */}
             {paymentMethod === "upi" && (
               <div className="form-group">
-                <label>UPI ID (Google Pay, PhonePe, Paytm)</label>
+                <label>UPI ID (Google Pay, PhonePe, Paytm, BHIM)</label>
                 <input
                   type="text"
                   placeholder="username@okhdfcbank"
@@ -285,19 +303,19 @@ export default function Checkout() {
                   onChange={(e) => setUpiId(e.target.value)}
                 />
                 <span style={{ fontSize: "0.78rem", color: "var(--brand-accent)", marginTop: "4px" }}>
-                  ✓ Instant zero-fee verification
+                  Verified zero-fee instant processing
                 </span>
               </div>
             )}
 
-            {/* Card Option with Visual Mockup */}
+            {/* Card */}
             {paymentMethod === "card" && (
               <div>
                 <div className="card-preview-box">
                   <div className="card-preview-chip" />
                   <div className="card-preview-number">{cardDetails.number || "•••• •••• •••• ••••"}</div>
                   <div className="card-preview-bottom">
-                    <div>{cardDetails.name || "CARDHOLDER NAME"}</div>
+                    <div>{cardDetails.name || "CARDHOLDER"}</div>
                     <div>{cardDetails.expiry || "MM/YY"}</div>
                   </div>
                 </div>
@@ -306,7 +324,7 @@ export default function Checkout() {
                   <div className="form-group full-span">
                     <label>Card Number</label>
                     <input
-                      placeholder="4532 1234 5678 8829"
+                      placeholder="Card Number"
                       value={cardDetails.number}
                       onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
                     />
@@ -314,7 +332,7 @@ export default function Checkout() {
                   <div className="form-group">
                     <label>Expiry (MM/YY)</label>
                     <input
-                      placeholder="08/29"
+                      placeholder="MM/YY"
                       value={cardDetails.expiry}
                       onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
                     />
@@ -324,7 +342,7 @@ export default function Checkout() {
                     <input
                       type="password"
                       maxLength={4}
-                      placeholder="123"
+                      placeholder="CVV"
                       value={cardDetails.cvv}
                       onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
                     />
@@ -333,20 +351,39 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* COD Option */}
+            {/* COD */}
             {paymentMethod === "cod" && (
-              <div style={{ background: "var(--bg-subtle)", padding: "14px", borderRadius: "10px", fontSize: "0.88rem" }}>
-                <p>💵 Pay with cash or UPI at the time of doorstep delivery.</p>
+              <div
+                style={{
+                  background: "var(--bg-subtle)",
+                  border: "1px solid var(--panel-border)",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  fontSize: "0.88rem",
+                }}
+              >
+                <strong>Cash on Delivery Selected</strong>
+                <p style={{ color: "var(--text-muted)", marginTop: "4px" }}>
+                  Pay ₹{grandTotal.toLocaleString("en-IN")} via cash or UPI directly to the courier executive upon delivery.
+                </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT COLUMN — SUMMARY & PLACE ORDER */}
+        {/* RIGHT COLUMN */}
         <div className="checkout-summary-card">
           <h3>Order Review ({checkoutItems.length} items)</h3>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "240px", overflowY: "auto" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              maxHeight: "240px",
+              overflowY: "auto",
+            }}
+          >
             {checkoutItems.map((item, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <img
@@ -355,23 +392,34 @@ export default function Checkout() {
                   style={{ width: "48px", height: "48px", borderRadius: "8px", objectFit: "cover" }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
                     {item.title}
                   </div>
                   <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    Qty: {item.quantity || 1} × ₹{item.price}
+                    Qty: {item.quantity || 1} × ₹{item.price.toLocaleString("en-IN")}
                   </div>
                 </div>
                 <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>
-                  ₹{((item.quantity || 1) * item.price).toFixed(0)}
+                  ₹{((item.quantity || 1) * item.price).toLocaleString("en-IN")}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="summary-row" style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px" }}>
+          <div
+            className="summary-row"
+            style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px" }}
+          >
             <span>Subtotal</span>
-            <span>₹{itemsTotal.toFixed(0)}</span>
+            <span>₹{itemsTotal.toLocaleString("en-IN")}</span>
           </div>
 
           <div className="summary-row">
@@ -382,24 +430,81 @@ export default function Checkout() {
           {discountInfo.amount > 0 && (
             <div className="summary-row" style={{ color: "var(--brand-accent)" }}>
               <span>Coupon ({discountInfo.promo})</span>
-              <span>-₹{discountInfo.amount}</span>
+              <span>-₹{discountInfo.amount.toLocaleString("en-IN")}</span>
             </div>
           )}
 
           <div className="summary-row total">
             <span>Final Amount</span>
-            <span>₹{grandTotal.toFixed(0)}</span>
+            <span>₹{grandTotal.toLocaleString("en-IN")}</span>
           </div>
 
           <button
             className="checkout-submit-btn"
-            onClick={handlePlaceOrder}
+            onClick={handleInitiateOrder}
             disabled={loading}
           >
-            {loading ? "Processing Order..." : `Confirm & Place Order (₹${grandTotal.toFixed(0)})`}
+            {loading
+              ? "Processing Order..."
+              : `Confirm & Place Order (₹${grandTotal.toLocaleString("en-IN")})`}
           </button>
         </div>
       </div>
+
+      {/* CASH ON DELIVERY CONFIRMATION MODAL */}
+      {showCodModal && (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>Confirm Cash on Delivery</h3>
+              <button onClick={() => setShowCodModal(false)}>
+                <CloseIcon size={20} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
+              You are about to place a <strong>Cash on Delivery (COD)</strong> order for a total of{" "}
+              <strong style={{ color: "var(--text)" }}>₹{grandTotal.toLocaleString("en-IN")}</strong>.
+            </div>
+
+            <div
+              style={{
+                background: "var(--bg-subtle)",
+                border: "1px solid var(--panel-border)",
+                padding: "14px",
+                borderRadius: "12px",
+                fontSize: "0.85rem",
+              }}
+            >
+              <div><strong>Delivery Address:</strong></div>
+              <div>{address.name}</div>
+              <div>{address.street}, {address.city} - {address.zip}</div>
+              <div>Phone: {address.phone}</div>
+            </div>
+
+            <div style={{ fontSize: "0.8rem", color: "var(--brand-warning)", fontWeight: 600 }}>
+              Please ensure someone is available at the address to receive the package and complete payment.
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="cta-secondary"
+                onClick={() => setShowCodModal(false)}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                className="cta-primary"
+                onClick={executeOrderPlacement}
+                style={{ flex: 1 }}
+              >
+                Confirm COD Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "./Navbar";
+import { ShieldIcon, TruckIcon, CheckIcon } from "./components/Icons";
 
 export default function Login({ form, handleChange, handleLogin }) {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function Login({ form, handleChange, handleLogin }) {
             <div>
               <h1 style={{ fontSize: "1.3rem", fontWeight: 800 }}>Welcome Back</h1>
               <p style={{ fontSize: "0.84rem", color: "var(--text-muted)" }}>
-                Sign in to your OS account to access cart and orders.
+                Sign in to your OS account to manage bag and orders.
               </p>
             </div>
           </div>
@@ -73,7 +74,7 @@ export default function Login({ form, handleChange, handleLogin }) {
                 onClick={() => navigate("/signup")}
                 style={{ color: "var(--brand-primary)", fontWeight: 700, textDecoration: "underline" }}
               >
-                Create one for free
+                Create an account
               </button>
             </p>
           </form>
@@ -83,7 +84,7 @@ export default function Login({ form, handleChange, handleLogin }) {
   );
 }
 
-/* ------------------ FormField ------------------ */
+/* FormField */
 function FormField({ label, name, value, onChange, placeholder, type = "text" }) {
   return (
     <div className="form-group">
@@ -101,7 +102,7 @@ function FormField({ label, name, value, onChange, placeholder, type = "text" })
   );
 }
 
-/* ------------------ MarketingPane ------------------ */
+/* MarketingPane */
 function MarketingPane() {
   return (
     <div className="mk-pane">
@@ -127,9 +128,18 @@ function MarketingPane() {
       </div>
 
       <ul className="usp">
-        <li>🔒 256-Bit SSL Checkout</li>
-        <li>⚡ Instant Delivery</li>
-        <li>🛡️ 7-Day Replacement</li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <ShieldIcon size={14} />
+          <span>256-Bit SSL Checkout</span>
+        </li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <TruckIcon size={14} />
+          <span>Same-Day Dispatch</span>
+        </li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <CheckIcon size={14} />
+          <span>7-Day Replacement</span>
+        </li>
       </ul>
     </div>
   );

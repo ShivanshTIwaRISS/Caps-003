@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import {
+  TrashIcon,
+  CartIcon,
+  CheckIcon,
+  ShieldIcon,
+  ArrowRightIcon,
+} from "./components/Icons";
 
 export default function Cart() {
   const {
@@ -16,13 +23,11 @@ export default function Cart() {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
 
-  // Promo code system
   const [promoCode, setPromoCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState("");
   const [promoError, setPromoError] = useState("");
 
-  // Load cart on mount
   useEffect(() => {
     if (token) reloadCart();
   }, [token, reloadCart]);
@@ -35,17 +40,17 @@ export default function Cart() {
     if (code === "SAVE20") {
       const disc = Math.round(totalPrice * 0.2);
       setDiscountAmount(disc);
-      setAppliedPromo("SAVE20 (20% OFF)");
+      setAppliedPromo("SAVE20 (20% Discount)");
     } else if (code === "WELCOME50") {
-      const disc = Math.min(50, totalPrice);
+      const disc = Math.min(500, Math.round(totalPrice * 0.1));
       setDiscountAmount(disc);
-      setAppliedPromo("WELCOME50 (₹50 OFF)");
+      setAppliedPromo("WELCOME50 (₹500 Discount)");
     } else if (code === "CYBER10") {
       const disc = Math.round(totalPrice * 0.1);
       setDiscountAmount(disc);
-      setAppliedPromo("CYBER10 (10% OFF)");
+      setAppliedPromo("CYBER10 (10% Discount)");
     } else {
-      setPromoError("Invalid promo code. Try SAVE20 or WELCOME50");
+      setPromoError("Invalid promo code. Try SAVE20 or CYBER10");
       setDiscountAmount(0);
       setAppliedPromo("");
     }
@@ -53,26 +58,30 @@ export default function Cart() {
 
   const handleCheckout = () => {
     localStorage.removeItem("buyNowProduct");
-    // Save discount info for checkout
-    localStorage.setItem("cartDiscount", JSON.stringify({ amount: discountAmount, promo: appliedPromo }));
+    localStorage.setItem(
+      "cartDiscount",
+      JSON.stringify({ amount: discountAmount, promo: appliedPromo })
+    );
     navigate("/checkout");
   };
 
-  const freeShippingThreshold = 999;
+  const freeShippingThreshold = 2000;
   const progressPercent = Math.min(100, (totalPrice / freeShippingThreshold) * 100);
   const diffToFree = Math.max(0, freeShippingThreshold - totalPrice);
-
   const finalTotal = Math.max(0, totalPrice - discountAmount);
 
   if (cartItems.length === 0) {
     return (
       <div className="cart-page">
         <div className="cart-empty">
-          <span style={{ fontSize: "3.5rem", display: "block", marginBottom: "16px" }}>🛒</span>
+          <div style={{ color: "var(--text-muted)", marginBottom: "16px" }}>
+            <CartIcon size={54} />
+          </div>
           <h2>Your Shopping Bag is Empty</h2>
-          <p>Explore our trending catalog and discover incredible cyber-grade tech!</p>
+          <p>Explore our catalog of high-performance electronics and accessories.</p>
           <Link to="/products" className="cta-primary" style={{ display: "inline-flex" }}>
-            Explore Products Now →
+            <span>Explore Products</span>
+            <ArrowRightIcon size={16} />
           </Link>
         </div>
       </div>
@@ -93,20 +102,36 @@ export default function Cart() {
           marginBottom: "24px",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", fontWeight: 700, marginBottom: "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.88rem",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
           <span>
             {diffToFree === 0
-              ? "🎉 You've unlocked FREE Express Shipping!"
-              : `Add ₹${diffToFree.toFixed(0)} more to unlock FREE Express Shipping`}
+              ? "Free Express Shipping unlocked on this order"
+              : `Add ₹${diffToFree.toLocaleString("en-IN")} more for Free Express Shipping`}
           </span>
           <span style={{ color: "var(--brand-accent)" }}>{Math.round(progressPercent)}%</span>
         </div>
-        <div style={{ width: "100%", height: "8px", background: "var(--bg-subtle)", borderRadius: "999px", overflow: "hidden" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "6px",
+            background: "var(--bg-subtle)",
+            borderRadius: "999px",
+            overflow: "hidden",
+          }}
+        >
           <div
             style={{
               width: `${progressPercent}%`,
               height: "100%",
-              background: "linear-gradient(90deg, var(--brand-primary), var(--brand-accent))",
+              background: "var(--brand-primary)",
               transition: "width 0.3s ease",
             }}
           />
@@ -114,7 +139,7 @@ export default function Cart() {
       </div>
 
       <div className="cart-grid">
-        {/* LEFT — ITEM CARDS */}
+        {/* ITEM CARDS */}
         <div className="cart-items">
           {cartItems.map((item) => (
             <div key={item.cartItemId || item.id} className="cart-item">
@@ -122,7 +147,7 @@ export default function Cart() {
 
               <div className="cart-item-info">
                 <h3>{item.title}</h3>
-                <p className="cart-price">₹{item.price}</p>
+                <p className="cart-price">₹{item.price.toLocaleString("en-IN")}</p>
 
                 <div className="cart-qty-row">
                   <div className="cart-qty-selector">
@@ -148,14 +173,15 @@ export default function Cart() {
                   </div>
 
                   <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginLeft: "8px" }}>
-                    Subtotal: <strong>₹{(item.price * item.quantity).toFixed(0)}</strong>
+                    Subtotal: <strong>₹{(item.price * item.quantity).toLocaleString("en-IN")}</strong>
                   </span>
 
                   <button
                     className="cart-remove-btn"
                     onClick={() => removeItemFromCart(item.cartItemId || item.id)}
                   >
-                    🗑 Remove
+                    <TrashIcon size={14} />
+                    <span>Remove</span>
                   </button>
                 </div>
               </div>
@@ -164,7 +190,7 @@ export default function Cart() {
 
           <button
             onClick={() => {
-              if (window.confirm("Are you sure you want to clear your cart?")) {
+              if (window.confirm("Are you sure you want to clear your shopping cart?")) {
                 clearCart();
               }
             }}
@@ -180,30 +206,30 @@ export default function Cart() {
           </button>
         </div>
 
-        {/* RIGHT — ORDER SUMMARY & PROMO */}
+        {/* ORDER SUMMARY */}
         <div className="cart-summary">
           <h2>Order Summary</h2>
 
           <div className="summary-row">
-            <span>Items Subtotal ({totalItems})</span>
-            <span>₹{totalPrice.toFixed(0)}</span>
+            <span>Subtotal ({totalItems} items)</span>
+            <span>₹{totalPrice.toLocaleString("en-IN")}</span>
           </div>
 
           <div className="summary-row">
             <span>Estimated Shipping</span>
             <span style={{ color: "var(--brand-accent)", fontWeight: 700 }}>
-              {diffToFree === 0 ? "FREE" : "₹49"}
+              {diffToFree === 0 ? "FREE" : "₹99"}
             </span>
           </div>
 
           {discountAmount > 0 && (
             <div className="summary-row" style={{ color: "var(--brand-accent)" }}>
               <span>Promo Discount ({appliedPromo})</span>
-              <span>-₹{discountAmount}</span>
+              <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
             </div>
           )}
 
-          {/* Promo Code Input */}
+          {/* Promo Input */}
           <form className="promo-input-group" onSubmit={handleApplyPromo}>
             <input
               type="text"
@@ -221,22 +247,44 @@ export default function Cart() {
           )}
 
           {appliedPromo && (
-            <div style={{ fontSize: "0.8rem", color: "var(--brand-accent)", fontWeight: 700 }}>
-              ✓ Coupon applied successfully!
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--brand-accent)",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <CheckIcon size={14} />
+              <span>Coupon applied successfully</span>
             </div>
           )}
 
           <div className="summary-row total">
             <span>Estimated Total</span>
-            <span>₹{finalTotal.toFixed(0)}</span>
+            <span>₹{finalTotal.toLocaleString("en-IN")}</span>
           </div>
 
           <button onClick={handleCheckout} className="cart-checkout-btn">
-            Proceed to Checkout →
+            <span>Proceed to Checkout</span>
+            <ArrowRightIcon size={16} />
           </button>
 
-          <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-dim)", marginTop: "4px" }}>
-            🔒 Safe and secure 256-Bit SSL encrypted checkout
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              fontSize: "0.78rem",
+              color: "var(--text-dim)",
+              marginTop: "4px",
+            }}
+          >
+            <ShieldIcon size={14} />
+            <span>256-Bit SSL Encrypted & Verified Checkout</span>
           </div>
         </div>
       </div>

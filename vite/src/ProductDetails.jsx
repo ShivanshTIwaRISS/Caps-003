@@ -3,6 +3,15 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
 import { getProductById, getProducts } from "./services/productService";
 import ProductCard from "./ProductCard";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  StarIcon,
+  CartIcon,
+  TruckIcon,
+  ShieldIcon,
+  PackageIcon,
+} from "./components/Icons";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -16,14 +25,11 @@ export default function ProductDetails() {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [addedToast, setAddedToast] = useState(false);
 
-  // Pincode checker state
   const [pincode, setPincode] = useState("");
   const [pincodeResult, setPincodeResult] = useState(null);
 
-  // User auth state
   const user = localStorage.getItem("user");
 
-  // Check if product is in cart
   const isInCart = cartItems.some(
     (i) => i.productId === Number(id) || i.id === Number(id)
   );
@@ -42,7 +48,6 @@ export default function ProductDetails() {
           setActiveImage(data.images && data.images.length > 0 ? data.images[0] : data.thumbnail);
           setLoading(false);
 
-          // Fetch related products in the same category
           if (data.category) {
             const rel = await getProducts({ category: data.category, limit: 4 });
             if (isCurrent) {
@@ -61,7 +66,9 @@ export default function ProductDetails() {
     }
 
     loadProduct();
-    return () => { isCurrent = false; };
+    return () => {
+      isCurrent = false;
+    };
   }, [id]);
 
   const handlePincodeCheck = (e) => {
@@ -73,7 +80,7 @@ export default function ProductDetails() {
     const d = new Date();
     d.setDate(d.getDate() + 2);
     const dateStr = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-    setPincodeResult(`✓ Express Delivery available to ${pincode} by ${dateStr} (FREE)`);
+    setPincodeResult(`Delivery available to ${pincode} by ${dateStr} (Free Express Shipping)`);
   };
 
   const handleAddToCart = () => {
@@ -127,10 +134,11 @@ export default function ProductDetails() {
       <div className="pd-container" style={{ textAlign: "center", padding: "80px 20px" }}>
         <h2>Product Not Found</h2>
         <p style={{ color: "var(--text-muted)", margin: "12px 0 24px" }}>
-          The item you are looking for does not exist or has been discontinued.
+          The product you are looking for is unavailable or discontinued.
         </p>
         <Link to="/products" className="cta-primary">
-          ← Back to Catalog
+          <ArrowLeftIcon size={16} />
+          <span>Back to Catalog</span>
         </Link>
       </div>
     );
@@ -162,17 +170,19 @@ export default function ProductDetails() {
             gap: "8px",
           }}
         >
-          ✓ Added {product.title} to your cart!
+          <CheckIcon size={18} />
+          <span>Added {product.title} to your bag</span>
         </div>
       )}
 
       {/* Breadcrumb */}
       <Link to="/products" className="pd-back-link">
-        ← Back to All Products
+        <ArrowLeftIcon size={16} />
+        <span>Back to All Products</span>
       </Link>
 
       <div className="pd-grid">
-        {/* LEFT — GALLERY */}
+        {/* GALLERY */}
         <div className="pd-gallery">
           <div className="pd-main-image-wrap">
             <img
@@ -197,14 +207,17 @@ export default function ProductDetails() {
           )}
         </div>
 
-        {/* RIGHT — DETAILS */}
+        {/* DETAILS */}
         <div className="pd-info">
           <span className="pd-brand-tag">{product.brand || product.category || "OS Choice"}</span>
           <h1 className="pd-title">{product.title}</h1>
 
           {/* Rating */}
           <div className="pd-rating-block">
-            <span className="pd-rating-pill">⭐ {product.rating} / 5</span>
+            <div className="pd-rating-pill">
+              <StarIcon size={14} filled={true} />
+              <span>{product.rating} / 5</span>
+            </div>
             <span style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
               Based on {product.reviewsCount || 48} verified customer reviews
             </span>
@@ -212,20 +225,22 @@ export default function ProductDetails() {
 
           {/* Price Card */}
           <div className="pd-price-card">
-            <span className="pd-current-price">₹{product.price}</span>
+            <span className="pd-current-price">₹{product.price.toLocaleString("en-IN")}</span>
             {product.originalPrice && (
-              <span className="pd-original-price">₹{product.originalPrice}</span>
+              <span className="pd-original-price">
+                ₹{product.originalPrice.toLocaleString("en-IN")}
+              </span>
             )}
             {product.discountPercentage > 0 && (
               <span className="pd-save-badge">
-                Save ₹{product.originalPrice - product.price} ({product.discountPercentage}% OFF)
+                Save ₹{(product.originalPrice - product.price).toLocaleString("en-IN")} ({product.discountPercentage}% OFF)
               </span>
             )}
           </div>
 
           <p className="pd-desc">{product.description}</p>
 
-          {/* Stock & Highlights */}
+          {/* Specifications Box */}
           <div
             style={{
               display: "grid",
@@ -241,7 +256,7 @@ export default function ProductDetails() {
             <div>
               <span style={{ color: "var(--text-muted)" }}>Stock Status: </span>
               <strong style={{ color: "var(--brand-accent)" }}>
-                ⚡ In Stock ({product.stock} units left)
+                In Stock ({product.stock} units available)
               </strong>
             </div>
             <div>
@@ -260,7 +275,10 @@ export default function ProductDetails() {
 
           {/* Pincode Estimator */}
           <div className="pd-delivery-box">
-            <strong style={{ fontSize: "0.9rem" }}>Check Delivery & COD Availability</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "0.9rem" }}>
+              <TruckIcon size={18} />
+              <span>Check Delivery & COD Availability</span>
+            </div>
             <form className="pd-pincode-form" onSubmit={handlePincodeCheck}>
               <input
                 type="text"
@@ -269,16 +287,22 @@ export default function ProductDetails() {
                 maxLength={6}
                 onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
               />
-              <button type="submit">Check</button>
+              <button type="submit">Verify</button>
             </form>
-            {pincodeResult && <div className="pd-pincode-result">{pincodeResult}</div>}
+            {pincodeResult && (
+              <div className="pd-pincode-result" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <CheckIcon size={16} />
+                <span>{pincodeResult}</span>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="pd-actions">
             {!isInCart ? (
               <button className="pd-add-btn" onClick={handleAddToCart}>
-                🛒 Add to Cart
+                <CartIcon size={18} />
+                <span>Add to Cart</span>
               </button>
             ) : (
               <button
@@ -286,18 +310,20 @@ export default function ProductDetails() {
                 onClick={() => navigate("/cart")}
                 style={{ background: "var(--brand-accent)", color: "#fff", borderColor: "var(--brand-accent)" }}
               >
-                ✓ In Cart — View Bag
+                <CheckIcon size={18} />
+                <span>In Cart — View Bag</span>
               </button>
             )}
 
             <button className="pd-buy-btn" onClick={handleBuyNow}>
-              ⚡ Instant Buy Now
+              <PackageIcon size={18} />
+              <span>Instant Buy Now</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ================= REVIEWS SECTION ================= */}
+      {/* CUSTOMER REVIEWS */}
       <section className="pd-reviews-section">
         <h3 className="pd-reviews-head">Verified Customer Reviews</h3>
 
@@ -310,10 +336,15 @@ export default function ProductDetails() {
                 </div>
                 <div>
                   <div className="review-name">{rev.reviewerName}</div>
-                  <div className="verified-badge">✓ Verified Buyer</div>
+                  <div className="verified-badge">
+                    <CheckIcon size={14} />
+                    <span>Verified Purchase</span>
+                  </div>
                 </div>
-                <div style={{ marginLeft: "auto", color: "#f59e0b", fontWeight: 700 }}>
-                  {"★".repeat(rev.rating || 5)}
+                <div style={{ marginLeft: "auto", display: "flex", gap: "2px", color: "var(--brand-warning)" }}>
+                  {Array.from({ length: rev.rating || 5 }).map((_, starIdx) => (
+                    <StarIcon key={starIdx} size={14} filled={true} />
+                  ))}
                 </div>
               </div>
               <p className="review-comment">"{rev.comment}"</p>
@@ -322,11 +353,11 @@ export default function ProductDetails() {
         </div>
       </section>
 
-      {/* ================= RELATED PRODUCTS ================= */}
+      {/* RELATED PRODUCTS */}
       {relatedProducts.length > 0 && (
         <section style={{ marginTop: "56px" }}>
           <h3 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "20px" }}>
-            You May Also Like
+            Recommended Accessories & Similar Items
           </h3>
           <div className="products-grid">
             {relatedProducts.map((p) => (

@@ -2,6 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { getProducts, getFlashDeals } from "./services/productService";
+import {
+  ClockIcon,
+  ArrowRightIcon,
+  ShieldIcon,
+  TruckIcon,
+  CheckIcon,
+  SparklesIcon,
+} from "./components/Icons";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -28,15 +36,12 @@ export default function Home() {
 
   const categories = [
     { label: "All", value: "all" },
-    { label: "📱 Smartphones", value: "smartphones" },
-    { label: "💻 Laptops", value: "laptops" },
-    { label: "✨ Fragrances", value: "fragrances" },
-    { label: "🥑 Groceries", value: "groceries" },
+    { label: "Smartphones", value: "smartphones" },
+    { label: "Laptops", value: "laptops" },
+    { label: "Fragrances", value: "fragrances" },
+    { label: "Groceries", value: "groceries" },
   ];
 
-  /* ----------------------------------------------------
-     FETCH FEATURED BY CATEGORY & TRENDING (Zero Buffering)
-     ---------------------------------------------------- */
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -66,27 +71,32 @@ export default function Home() {
     }
 
     loadData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [category]);
 
   const pad = (n) => String(n).padStart(2, "0");
 
   return (
     <div className="home-page">
-      {/* ================= HERO SECTION ================= */}
+      {/* HERO SECTION */}
       <section className="neo-hero">
         <div className="neo-hero-left">
-          <span className="hero-kicker">⚡ Next-Generation Shopping Experience</span>
+          <span className="hero-kicker">
+            <SparklesIcon size={14} /> Curated Next-Gen Catalog
+          </span>
           <h1>
-            Discover Tomorrow's <span>Tech & Gadgets</span> Today
+            Precision Engineered <span>Electronics & Hardware</span>
           </h1>
           <p className="hero-sub">
-            Explore cyber-grade hardware, flagship smartphones, ultrabooks, and luxury lifestyle picks with lightning-fast delivery and verified authentic quality.
+            Discover verified flagship hardware, ultrabooks, smartphones, and luxury accessories with same-day dispatch and comprehensive manufacturer warranty.
           </p>
 
           <div className="hero-actions">
             <Link to="/products" className="cta-primary">
-              Explore Full Catalog →
+              <span>Explore Full Catalog</span>
+              <ArrowRightIcon size={16} />
             </Link>
             <button
               className="cta-secondary"
@@ -95,17 +105,17 @@ export default function Home() {
                 dealsSection?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              🔥 Today's Flash Deals
+              Today's Deals
             </button>
           </div>
 
-          {/* Quick Category Filter Chips */}
+          {/* Category Filter Chips */}
           <div className="home-categories">
             {categories.map((c) => (
               <button
                 key={c.value}
                 className={`chip ${category.toLowerCase() === c.value.toLowerCase() ? "active" : ""}`}
-                onClick={() => setCategory(c.label.replace(/[^a-zA-Z]/g, ""))}
+                onClick={() => setCategory(c.label)}
               >
                 {c.label}
               </button>
@@ -113,41 +123,44 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Hero Right Interactive Tiles */}
+        {/* Hero Right Visual Tiles with ACCURATE Redirections */}
         <div className="neo-hero-right">
+          {/* Tile 1: Athletic Shoes -> search=shoes */}
           <div
             className="neo-tile neo-tile--main"
             style={{
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80')",
             }}
-            onClick={() => navigate("/products?category=smartphones")}
+            onClick={() => navigate("/products?search=shoes")}
             role="button"
           >
             <div className="neo-tile-overlay" />
             <div className="neo-tile-content">
-              <span className="neo-pill">Special Drop</span>
-              <h3>Cyber Sneakers & Wearables</h3>
-              <p>Hyper-cushioning and smart ergonomics.</p>
+              <span className="neo-pill">Featured Apparel</span>
+              <h3>Performance Footwear</h3>
+              <p>Ergonomic high-traction athletic series.</p>
             </div>
           </div>
 
+          {/* Tile 2: Audio & Headphones -> search=headphones */}
           <div
             className="neo-tile neo-tile--small"
             style={{
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=80')",
             }}
-            onClick={() => navigate("/products?category=laptops")}
+            onClick={() => navigate("/products?search=headphones")}
             role="button"
           >
             <div className="neo-tile-overlay" />
             <div className="neo-tile-content mini">
-              <p>🎧 Studio Grade Audio</p>
-              <span>ANC Wireless Headphones</span>
+              <p>Studio Audio Systems</p>
+              <span>ANC Headsets & Earbuds</span>
             </div>
           </div>
 
+          {/* Tile 3: Laptops & Workstations -> category=laptops */}
           <div
             className="neo-tile neo-tile--small"
             style={{
@@ -159,22 +172,23 @@ export default function Home() {
           >
             <div className="neo-tile-overlay" />
             <div className="neo-tile-content mini">
-              <p>💻 Pro Workstations</p>
-              <span>M-Series Silicon & GPUs</span>
+              <p>Pro Silicon Workstations</p>
+              <span>High-Performance Laptops</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= FLASH DEALS SECTION ================= */}
+      {/* FLASH DEALS SECTION */}
       <section className="flash-deals-banner" id="flash-deals-section">
         <div className="flash-deals-header">
           <div className="flash-title-area">
-            <span className="flash-badge">⚡ FLASH SALE</span>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: 800 }}>Limited Time Cyber Specials</h3>
+            <span className="flash-badge">LIMITED TIME</span>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: 800 }}>Exclusive Daily Promotions</h3>
           </div>
 
           <div className="flash-countdown">
+            <ClockIcon size={16} />
             <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Ending in:</span>
             <span className="countdown-box">{pad(timeLeft.hours)}h</span>:
             <span className="countdown-box">{pad(timeLeft.minutes)}m</span>:
@@ -192,30 +206,34 @@ export default function Home() {
               <img src={deal.thumbnail} alt={deal.title} className="flash-card-img" />
               <div className="flash-card-title">{deal.title}</div>
               <div className="flash-prices">
-                <span className="flash-price">₹{deal.price}</span>
-                <span className="flash-orig-price">₹{deal.originalPrice}</span>
+                <span className="flash-price">₹{deal.price.toLocaleString("en-IN")}</span>
+                <span className="flash-orig-price">₹{deal.originalPrice.toLocaleString("en-IN")}</span>
               </div>
               <div className="flash-progress-bar">
-                <div className="flash-progress-fill" style={{ width: `${Math.min(85, deal.stock * 3)}%` }} />
+                <div
+                  className="flash-progress-fill"
+                  style={{ width: `${Math.min(85, deal.stock * 3)}%` }}
+                />
               </div>
               <div className="flash-stock-text">
-                <span>🔥 Almost Sold Out</span>
-                <span>{deal.stock} left</span>
+                <span>High Demand</span>
+                <span>{deal.stock} units remaining</span>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ================= FEATURED PICKS ================= */}
+      {/* FEATURED PRODUCTS */}
       <section className="home-section">
         <header className="home-section-head">
           <div>
-            <p className="home-tagline">Handpicked for you</p>
+            <p className="home-tagline">Curated Picks</p>
             <h2 className="home-section-title">Featured Products</h2>
           </div>
           <Link to="/products" className="linklike-cta">
-            View full catalog →
+            <span>View Full Catalog</span>
+            <ArrowRightIcon size={16} />
           </Link>
         </header>
 
@@ -234,12 +252,12 @@ export default function Home() {
         )}
       </section>
 
-      {/* ================= TRENDING TODAY ================= */}
+      {/* TOP RATED */}
       <section className="home-section">
         <header className="home-section-head">
           <div>
-            <p className="home-tagline">Most loved this week</p>
-            <h2 className="home-section-title">🔥 Top Rated & Trending</h2>
+            <p className="home-tagline">Highest Rated</p>
+            <h2 className="home-section-title">Top Rated & Trending</h2>
           </div>
         </header>
 
@@ -258,7 +276,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ================= TRUST BADGES & METRICS ================= */}
+      {/* TRUST BADGES */}
       <section
         style={{
           display: "grid",
@@ -272,56 +290,57 @@ export default function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontSize: "2rem" }}>🚀</span>
+          <div style={{ color: "var(--brand-primary)" }}><TruckIcon size={28} /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>Free Express Delivery</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>On all prepaid orders over ₹499</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>On all orders across India</div>
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontSize: "2rem" }}>🛡️</span>
+          <div style={{ color: "var(--brand-accent)" }}><CheckIcon size={28} /></div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>7-Day Easy Returns</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Instant replacement or refund</div>
+            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>7-Day Replacement</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Hassle-free doorstep returns</div>
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontSize: "2rem" }}>🔒</span>
+          <div style={{ color: "var(--brand-primary)" }}><ShieldIcon size={28} /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>256-Bit SSL Secured</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>UPI, Cards & Net Banking</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>UPI, Cards & Verified COD</div>
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontSize: "2rem" }}>💬</span>
+          <div style={{ color: "var(--brand-warning)" }}><SparklesIcon size={28} /></div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>24/7 Dedicated Support</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Expert assistance anytime</div>
+            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>100% Genuine Gear</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Direct brand warranty support</div>
           </div>
         </div>
       </section>
 
-      {/* ================= CTA BANNER ================= */}
+      {/* CTA BANNER */}
       <section
         style={{
           textAlign: "center",
           padding: "48px 24px",
-          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(6, 182, 212, 0.15))",
+          background: "var(--panel)",
           border: "1px solid var(--panel-border)",
           borderRadius: "24px",
         }}
       >
-        <h2 style={{ fontSize: "2.2rem", fontWeight: 900, marginBottom: "10px" }}>
-          Ready to Upgrade Your Tech Setup?
+        <h2 style={{ fontSize: "2.2rem", fontWeight: 800, marginBottom: "10px" }}>
+          Upgrade Your Hardware Today
         </h2>
         <p style={{ color: "var(--text-muted)", maxWidth: "550px", margin: "0 auto 24px" }}>
-          Join over 50,000+ satisfied tech enthusiasts who choose OS Store for authentic, warranty-backed gear.
+          Join thousands of professionals and developers who trust OS Store for certified, genuine electronics.
         </p>
         <Link to="/products" className="cta-primary">
-          Browse All Products →
+          <span>Browse All Hardware</span>
+          <ArrowRightIcon size={16} />
         </Link>
       </section>
     </div>

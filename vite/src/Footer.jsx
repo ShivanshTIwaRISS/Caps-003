@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ShieldIcon, TruckIcon } from "./components/Icons";
 
 export default function Footer() {
   return (
@@ -10,7 +11,7 @@ export default function Footer() {
           className="neo-footer-top-btn"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
-          ↑ Back to Top of Page
+          Back to Top of Page
         </div>
 
         {/* Footer Link Columns */}
@@ -21,14 +22,14 @@ export default function Footer() {
             <ul>
               <li><Link to="/info/about">About OS Store</Link></li>
               <li><Link to="/info/careers">Careers & Openings</Link></li>
-              <li><Link to="/info/press">Press & Media</Link></li>
-              <li><Link to="/info/devices">OS Cyber Devices</Link></li>
+              <li><Link to="/info/press">Press & Announcements</Link></li>
+              <li><Link to="/info/devices">OS Hardware Devices</Link></li>
             </ul>
           </div>
 
           {/* Column 2 */}
           <div className="footer-col">
-            <h4>Make Money with Us</h4>
+            <h4>Merchant & Partners</h4>
             <ul>
               <li><Link to="/info/sell">Sell on OS Marketplace</Link></li>
               <li><Link to="/info/affiliate">Creator Affiliate Program</Link></li>
@@ -38,10 +39,10 @@ export default function Footer() {
 
           {/* Column 3 */}
           <div className="footer-col">
-            <h4>Customer Care & Policies</h4>
+            <h4>Customer Care</h4>
             <ul>
-              <li><Link to="/info/help">Help Center & FAQs</Link></li>
-              <li><Link to="/info/returns">Returns & Replacement</Link></li>
+              <li><Link to="/info/help">Help Center & FAQ</Link></li>
+              <li><Link to="/info/returns">Returns & Replacement Portal</Link></li>
               <li><Link to="/orders">Track Your Orders</Link></li>
               <li><Link to="/profile">Account Settings</Link></li>
             </ul>
@@ -49,23 +50,29 @@ export default function Footer() {
 
           {/* Column 4 */}
           <div className="footer-col">
-            <h4>Connect & Security</h4>
+            <h4>Security & Support</h4>
             <ul>
-              <li><span style={{ color: "var(--brand-accent)" }}>🔒 256-Bit SSL Encryption</span></li>
-              <li><span style={{ color: "var(--brand-primary)" }}>🚀 Same-Day Dispatch</span></li>
-              <li><span style={{ color: "var(--text-muted)" }}>📍 Bengaluru, India</span></li>
-              <li><span style={{ color: "var(--text-muted)" }}>✉️ support@osstore.io</span></li>
+              <li style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--brand-accent)" }}>
+                <ShieldIcon size={16} />
+                <span>256-Bit SSL Secured</span>
+              </li>
+              <li style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--brand-primary)" }}>
+                <TruckIcon size={16} />
+                <span>Same-Day Dispatch</span>
+              </li>
+              <li style={{ color: "var(--text-muted)" }}>Bengaluru, Karnataka, India</li>
+              <li style={{ color: "var(--text-muted)" }}>support@osstore.io</li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Branding */}
+        {/* Bottom */}
         <div className="neo-footer-bottom">
           <div>© {new Date().getFullYear()} OS Store. All Rights Reserved.</div>
           <div style={{ display: "flex", gap: "16px" }}>
-            <span>Powered by React 19 & Vite</span>
+            <span>Verified Authentic Inventory</span>
             <span>•</span>
-            <span>100% Genuine Certified Gear</span>
+            <span>All Prices Inclusive of GST</span>
           </div>
         </div>
       </div>

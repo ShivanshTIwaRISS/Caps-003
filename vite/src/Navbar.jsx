@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
 import { useTheme } from "./ThemeContext";
 import { getSearchSuggestions } from "./services/productService";
+import {
+  SearchIcon,
+  CartIcon,
+  PackageIcon,
+  SunIcon,
+  MoonIcon,
+  SettingsIcon,
+  LogOutIcon,
+} from "./components/Icons";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
   const searchContainerRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -18,13 +26,11 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // User state
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Keep user updated if changed in localStorage
   useEffect(() => {
     const checkUser = () => {
       const saved = localStorage.getItem("user");
@@ -34,7 +40,6 @@ export default function Navbar() {
     return () => window.removeEventListener("storage", checkUser);
   }, []);
 
-  // Close suggestions or profile dropdown when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
@@ -48,7 +53,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Live search suggestions with fast debounced fetching
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -89,35 +93,38 @@ export default function Navbar() {
   const avatar = user?.name ? user.name.charAt(0).toUpperCase() : "U";
 
   const categories = [
-    { label: "⚡ All Products", path: "/products" },
-    { label: "🔥 Cyber Deals", path: "/products?sort=discount" },
-    { label: "📱 Smartphones", path: "/products?category=smartphones" },
-    { label: "💻 Laptops", path: "/products?category=laptops" },
-    { label: "✨ Fragrances", path: "/products?category=fragrances" },
-    { label: "🥑 Groceries", path: "/products?category=groceries" },
+    { label: "All Products", path: "/products" },
+    { label: "Flash Deals", path: "/products?sort=discount" },
+    { label: "Smartphones", path: "/products?category=smartphones" },
+    { label: "Laptops", path: "/products?category=laptops" },
+    { label: "Fragrances", path: "/products?category=fragrances" },
+    { label: "Groceries", path: "/products?category=groceries" },
   ];
 
   return (
     <>
       <nav className="navbar">
-        {/* LEFT — LOGO */}
+        {/* BRAND LOGO */}
         <div className="brand" onClick={() => navigate("/")} title="OS Store Home">
           <span className="brand-dot" />
           <span>OS STORE</span>
           <span className="brand-tag">v3.0</span>
         </div>
 
-        {/* CENTER — SEARCH BAR */}
+        {/* SEARCH BAR */}
         <div className="nav-search" ref={searchContainerRef}>
           <form className="nav-search-bar" onSubmit={handleSearchSubmit}>
+            <SearchIcon size={16} />
             <input
               type="text"
-              placeholder="Search futuristic products, laptops, gadgets..."
+              placeholder="Search products, laptops, smartphones..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm && setShowDropdown(true)}
             />
-            <button type="submit" aria-label="Search">🔍</button>
+            <button type="submit" aria-label="Search">
+              Search
+            </button>
           </form>
 
           {showDropdown && suggestions.length > 0 && (
@@ -139,7 +146,7 @@ export default function Navbar() {
                   />
                   <div className="nav-suggestion-info">
                     <div className="nav-suggestion-title">{prod.title}</div>
-                    <div className="nav-suggestion-price">₹{prod.price}</div>
+                    <div className="nav-suggestion-price">₹{prod.price.toLocaleString("en-IN")}</div>
                   </div>
                 </li>
               ))}
@@ -147,16 +154,16 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* RIGHT SIDE ACTIONS */}
+        {/* RIGHT ACTIONS */}
         <div className="nav-right">
-          {/* Theme Switcher Button */}
+          {/* Theme Toggle Button with SVG Icons */}
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
             title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
             aria-label="Toggle Theme"
           >
-            {isDark ? "☀️" : "🌙"}
+            {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
 
           {/* Orders Link */}
@@ -167,26 +174,25 @@ export default function Navbar() {
               title="My Orders"
               aria-label="My Orders"
             >
-              📦
+              <PackageIcon size={18} />
             </button>
           )}
 
-          {/* Cart with Live Badge Counter */}
+          {/* Cart Icon with Counter */}
           <button
             className="nav-icon-btn"
             onClick={() => navigate("/cart")}
             title="Shopping Cart"
             aria-label="Shopping Cart"
           >
-            🛒
+            <CartIcon size={18} />
             {totalItems > 0 && <span className="nav-badge">{totalItems}</span>}
           </button>
 
-          {/* Guest Auth Buttons */}
           {!user && (
             <>
               <button className="nav-btn nav-login-btn" onClick={() => navigate("/login")}>
-                Login
+                Sign In
               </button>
               <button className="nav-btn nav-signup-btn" onClick={() => navigate("/signup")}>
                 Sign Up
@@ -194,7 +200,6 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Logged in User Profile Avatar */}
           {user && (
             <div className="nav-profile" ref={profileRef}>
               <div
@@ -219,7 +224,8 @@ export default function Navbar() {
                       setShowProfileMenu(false);
                     }}
                   >
-                    ⚙️ Settings & Profile
+                    <SettingsIcon size={16} />
+                    <span>Settings & Profile</span>
                   </button>
 
                   <button
@@ -229,7 +235,8 @@ export default function Navbar() {
                       setShowProfileMenu(false);
                     }}
                   >
-                    📦 My Orders
+                    <PackageIcon size={16} />
+                    <span>My Orders</span>
                   </button>
 
                   <button
@@ -238,14 +245,16 @@ export default function Navbar() {
                       toggleTheme();
                     }}
                   >
-                    {isDark ? "☀️ Switch to Light Mode" : "🌙 Switch to Dark Mode"}
+                    {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
+                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
                   </button>
 
                   <button
                     className="profile-menu-item logout-btn"
                     onClick={handleLogout}
                   >
-                    🚪 Logout
+                    <LogOutIcon size={16} />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}
@@ -254,7 +263,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* SUB-BAR CATEGORY PILLS */}
+      {/* SUB-BAR CATEGORIES */}
       <div className="nav-subbar">
         {categories.map((c, i) => (
           <Link

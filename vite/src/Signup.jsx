@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "./Navbar";
+import { ShieldIcon, TruckIcon, CheckIcon } from "./components/Icons";
 
 export default function Signup({ form, handleChange, handleSignup }) {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export default function Signup({ form, handleChange, handleSignup }) {
   );
 }
 
-/* ------------------ FormField ------------------ */
+/* FormField */
 function FormField({ label, name, value, onChange, placeholder, type = "text" }) {
   return (
     <div className="form-group">
@@ -109,7 +110,7 @@ function FormField({ label, name, value, onChange, placeholder, type = "text" })
   );
 }
 
-/* ------------------ MarketingPane ------------------ */
+/* MarketingPane */
 function MarketingPane() {
   return (
     <div className="mk-pane">
@@ -118,6 +119,7 @@ function MarketingPane() {
         {[
           "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
           "https://images.unsplash.com/photo-1511385348-a52b4a160dc2?q=80&w=1600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=1600&auto=format&fit=crop",
         ].map((src, i) => (
           <div className="slide" key={i} style={{ backgroundImage: `url(${src})` }} />
         ))}
@@ -134,9 +136,18 @@ function MarketingPane() {
       </div>
 
       <ul className="usp">
-        <li>🔒 256-Bit SSL Checkout</li>
-        <li>⚡ Instant Delivery</li>
-        <li>🛡️ 7-Day Replacement</li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <ShieldIcon size={14} />
+          <span>256-Bit SSL Checkout</span>
+        </li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <TruckIcon size={14} />
+          <span>Same-Day Dispatch</span>
+        </li>
+        <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <CheckIcon size={14} />
+          <span>7-Day Replacement</span>
+        </li>
       </ul>
     </div>
   );

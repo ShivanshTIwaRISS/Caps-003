@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { getProducts } from "./services/productService";
+import { CloseIcon } from "./components/Icons";
 
 export default function Products() {
   const location = useLocation();
@@ -34,7 +35,7 @@ export default function Products() {
     setPage(1);
   }, [location.search]);
 
-  // Fetch Products with Zero-Buffering & Skeleton Support
+  // Fetch Products
   useEffect(() => {
     let isCurrent = true;
     setLoading(true);
@@ -67,7 +68,9 @@ export default function Products() {
     }
 
     load();
-    return () => { isCurrent = false; };
+    return () => {
+      isCurrent = false;
+    };
   }, [page, searchTerm, category, ratingFilter, priceFilter, sortKey]);
 
   const handleResetFilters = () => {
@@ -82,9 +85,9 @@ export default function Products() {
   return (
     <div className="products-page">
       <div className="products-header">
-        <h1 className="products-title">Explore Catalog</h1>
+        <h1 className="products-title">Product Catalog</h1>
         <p className="products-subtitle">
-          Showing {products.length} of {totalCount} authentic tech products & gadgets
+          Showing {products.length} of {totalCount} authentic electronics and gear
         </p>
       </div>
 
@@ -131,8 +134,8 @@ export default function Products() {
             }}
           >
             <option value="">All Ratings</option>
-            <option value="4.5">⭐ 4.5 & Above</option>
-            <option value="4.0">⭐ 4.0 & Above</option>
+            <option value="4.5">4.5 Stars & Above</option>
+            <option value="4.0">4.0 Stars & Above</option>
           </select>
         </div>
 
@@ -146,16 +149,16 @@ export default function Products() {
               setPage(1);
             }}
           >
-            <option value="">Any Price</option>
-            <option value="low">Budget (Under ₹1,000)</option>
-            <option value="high">Premium (₹1,000+)</option>
+            <option value="">All Prices</option>
+            <option value="low">Under ₹2,000</option>
+            <option value="high">₹2,000 and Above</option>
           </select>
         </div>
 
         {/* Reset Filter Button */}
         {(searchTerm || category !== "all" || ratingFilter || priceFilter || sortKey) && (
           <button className="reset-filters-btn" onClick={handleResetFilters}>
-            ✕ Clear Filters
+            Clear Filters
           </button>
         )}
       </div>
@@ -164,16 +167,17 @@ export default function Products() {
       {searchTerm && (
         <div className="search-tag-banner">
           <span>
-            Search results for: <strong>"{searchTerm}"</strong>
+            Showing results for: <strong>"{searchTerm}"</strong>
           </span>
           <button
             onClick={() => {
               setSearchTerm("");
               navigate("/products");
             }}
-            style={{ color: "var(--brand-danger)", fontWeight: 700 }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--brand-danger)", fontWeight: 700 }}
           >
-            Clear Search ✕
+            <CloseIcon size={16} />
+            <span>Clear Search</span>
           </button>
         </div>
       )}
@@ -195,7 +199,7 @@ export default function Products() {
         <div className="no-results">
           <h3>No products match your criteria</h3>
           <p style={{ color: "var(--text-muted)", marginTop: "8px", marginBottom: "18px" }}>
-            Try adjusting your search terms or clearing filters.
+            Try adjusting your search query or reset all filters.
           </p>
           <button className="cta-primary" onClick={handleResetFilters}>
             Reset All Filters
