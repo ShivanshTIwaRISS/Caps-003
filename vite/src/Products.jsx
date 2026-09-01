@@ -87,7 +87,7 @@ export default function Products() {
       <div className="products-header">
         <h1 className="products-title">Product Catalog</h1>
         <p className="products-subtitle">
-          Showing {products.length} of {totalCount} authentic electronics and gear
+          Showing {products.length} of {totalCount} products across all categories
         </p>
       </div>
 
@@ -118,15 +118,26 @@ export default function Products() {
             <option value="all">All Categories</option>
             <option value="smartphones">Smartphones & Mobile</option>
             <option value="laptops">Laptops & Workstations</option>
+            <option value="tablets">Tablets</option>
+            <option value="mobile-accessories">Mobile Accessories</option>
             <option value="fragrances">Fragrances & Luxury</option>
+            <option value="beauty">Beauty & Makeup</option>
+            <option value="skin-care">Skin Care</option>
             <option value="groceries">Groceries & Essentials</option>
-            <option value="mens-shoes">Footwear & Sneakers</option>
-            <option value="mens-shirts">Mens Fashion & Shirts</option>
-            <option value="womens-dresses">Womens Fashion</option>
-            <option value="watches">Watches & Timepieces</option>
+            <option value="mens-shoes">Mens Footwear</option>
+            <option value="womens-shoes">Womens Footwear</option>
+            <option value="mens-shirts">Mens Shirts & Tops</option>
+            <option value="tops">Womens Tops</option>
+            <option value="womens-dresses">Womens Dresses</option>
+            <option value="mens-watches">Mens Watches</option>
+            <option value="womens-watches">Womens Watches</option>
             <option value="sunglasses">Sunglasses & Eyewear</option>
+            <option value="womens-bags">Womens Bags</option>
+            <option value="womens-jewellery">Jewellery</option>
             <option value="home-decoration">Home Decoration</option>
             <option value="furniture">Furniture & Office</option>
+            <option value="kitchen-accessories">Kitchen Accessories</option>
+            <option value="sports-accessories">Sports Accessories</option>
           </select>
         </div>
 
@@ -157,8 +168,12 @@ export default function Products() {
             }}
           >
             <option value="">All Prices</option>
-            <option value="low">Under ₹2,000</option>
-            <option value="high">₹2,000 and Above</option>
+            <option value="low">Budget (Sort: Low to High)</option>
+            <option value="under-500">Under ₹500</option>
+            <option value="500-2000">₹500 – ₹2,000</option>
+            <option value="2000-10000">₹2,000 – ₹10,000</option>
+            <option value="10000-50000">₹10,000 – ₹50,000</option>
+            <option value="high">Premium (₹50,000+)</option>
           </select>
         </div>
 

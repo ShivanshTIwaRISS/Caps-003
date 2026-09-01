@@ -141,8 +141,15 @@ export async function getProducts({
     let items = (data.products || []).map(enhanceProduct);
 
     if (rating) items = items.filter((p) => p.rating >= Number(rating));
+
+    // Price range filtering
     if (price === "low" || sort === "price-asc") items.sort((a, b) => a.price - b.price);
-    if (price === "high" || sort === "price-desc") items.sort((a, b) => b.price - a.price);
+    else if (price === "high") items = items.filter((p) => p.price >= 50000).sort((a, b) => b.price - a.price);
+    else if (price === "under-500") items = items.filter((p) => p.price < 500);
+    else if (price === "500-2000") items = items.filter((p) => p.price >= 500 && p.price < 2000);
+    else if (price === "2000-10000") items = items.filter((p) => p.price >= 2000 && p.price < 10000);
+    else if (price === "10000-50000") items = items.filter((p) => p.price >= 10000 && p.price < 50000);
+    else if (sort === "price-desc") items.sort((a, b) => b.price - a.price);
     if (sort === "rating") items.sort((a, b) => b.rating - a.rating);
     if (sort === "discount") items.sort((a, b) => b.discountPercentage - a.discountPercentage);
 

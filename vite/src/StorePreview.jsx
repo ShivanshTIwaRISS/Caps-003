@@ -39,6 +39,7 @@ export default function Home() {
     { label: "Laptops", value: "laptops" },
     { label: "Fragrances", value: "fragrances" },
     { label: "Groceries", value: "groceries" },
+    { label: "Fashion", value: "mens-shirts" },
   ];
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export default function Home() {
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80')",
             }}
-            onClick={() => navigate("/products?category=footwear")}
+            onClick={() => navigate("/products?category=mens-shoes")}
             role="button"
           >
             <div className="neo-tile-overlay" />
