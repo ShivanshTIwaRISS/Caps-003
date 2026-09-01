@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./index.css";
 import api from "./services/api";
+import { WishlistProvider } from "./WishlistContext";
+
 // Layout
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -12,16 +14,14 @@ import Signup from "./Signup";
 import Home from "./StorePreview";
 import Products from "./Products";
 import ProductDetails from "./ProductDetails";
-import GenericInfoPage from "./GenericInfoPage"; 
+import GenericInfoPage from "./GenericInfoPage";
 import Checkout from "./Checkout";
 import Cart from "./Cart";
 import OrderHistory from "./OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./Profile";
+import Wishlist from "./Wishlist";
 import MobileBottomNav from "./MobileBottomNav";
-
-
-
 
 export default function App() {
   const navigate = useNavigate();
@@ -38,9 +38,8 @@ export default function App() {
 
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
-
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      navigate("/"); // Redirect to home
+      navigate("/");
     } catch (err) {
       alert(err.response?.data?.message || "Signup failed");
     }
@@ -54,140 +53,143 @@ export default function App() {
 
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
-         localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/"); // Redirect to home
+      navigate("/");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="os-root">
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <Login
-              form={form}
-              handleChange={handleChange}
-              handleLogin={handleLogin}
-            />
-          }
-        />
+    <WishlistProvider>
+      <div className="os-root">
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <Login
+                form={form}
+                handleChange={handleChange}
+                handleLogin={handleLogin}
+              />
+            }
+          />
 
-        {/* SIGNUP */}
-        <Route
-          path="/signup"
-          element={
-            <Signup
-              form={form}
-              handleChange={handleChange}
-              handleSignup={handleSignup}
-            />
-          }
-        />
+          <Route
+            path="/signup"
+            element={
+              <Signup
+                form={form}
+                handleChange={handleChange}
+                handleSignup={handleSignup}
+              />
+            }
+          />
 
-        {/* HOME (with Navbar + Footer) */}
-        <Route
-          path="/"
-          element={
-            <>
-              <Navbar />
-              <Home />
-              <Footer />
-            </>
-          }
-        />
+          <Route
+            path="/"
+            element={
+              <>
+                <Navbar />
+                <Home />
+                <Footer />
+              </>
+            }
+          />
 
-        {/* PRODUCTS PAGE */}
-        <Route
-          path="/products"
-          element={
-            <>
-              <Navbar />
-              <Products />
-              <Footer />
-            </>
-          }
-        />
+          <Route
+            path="/products"
+            element={
+              <>
+                <Navbar />
+                <Products />
+                <Footer />
+              </>
+            }
+          />
 
-        {/* PRODUCT DETAILS PAGE */}
-        <Route
-          path="/product/:id"
-          element={
-            <>
-              <Navbar />
-              <ProductDetails />
-              <Footer />
-            </>
-          }
-        />
-        <Route
-          path="/info/:page"
-          element={
-            <>
-              <Navbar />
-              <GenericInfoPage />
-              <Footer />
-            </>
-          }
-        />
-        {/* PROFILE PAGE (Protected) */}
-<Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <Navbar />
-      <Profile />
-      <Footer />
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="/product/:id"
+            element={
+              <>
+                <Navbar />
+                <ProductDetails />
+                <Footer />
+              </>
+            }
+          />
 
-        {/* CART (Protected) */}
-<Route
-  path="/cart"
-  element={
-    <ProtectedRoute>
-      <Navbar />
-      <Cart />
-      <Footer />
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="/info/:page"
+            element={
+              <>
+                <Navbar />
+                <GenericInfoPage />
+                <Footer />
+              </>
+            }
+          />
 
-{/* CHECKOUT (Protected) */}
-<Route
-  path="/checkout"
-  element={
-    <ProtectedRoute>
-      <Navbar />
-      <Checkout />
-      <Footer />
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <Profile />
+                <Footer />
+              </ProtectedRoute>
+            }
+          />
 
-{/* ORDERS (Protected) */}
-<Route
-  path="/orders"
-  element={
-    <ProtectedRoute>
-      <Navbar />
-      <OrderHistory />
-      <Footer />
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <Cart />
+                <Footer />
+              </ProtectedRoute>
+            }
+          />
 
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <Checkout />
+                <Footer />
+              </ProtectedRoute>
+            }
+          />
 
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <OrderHistory />
+                <Footer />
+              </ProtectedRoute>
+            }
+          />
 
+          <Route
+            path="/wishlist"
+            element={
+              <>
+                <Navbar />
+                <Wishlist />
+                <Footer />
+              </>
+            }
+          />
 
-        {/* Unknown routes → HOME */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-      <MobileBottomNav />
-    </div>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+        <MobileBottomNav />
+      </div>
+    </WishlistProvider>
   );
 }

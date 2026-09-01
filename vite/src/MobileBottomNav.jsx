@@ -1,12 +1,14 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "./CartContext";
-import { HomeIcon, SearchIcon, CartIcon, PackageIcon, UserIcon } from "./components/Icons";
+import { useWishlist } from "./WishlistContext";
+import { HomeIcon, SearchIcon, CartIcon, PackageIcon, UserIcon, HeartIcon } from "./components/Icons";
 
 export default function MobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { totalItems } = useCart();
+  const { totalWishlistItems } = useWishlist();
 
   const user = (() => {
     try {
@@ -20,31 +22,58 @@ export default function MobileBottomNav() {
     {
       label: "Home",
       path: "/",
-      icon: <HomeIcon size={22} />,
+      icon: <HomeIcon size={20} />,
     },
     {
-      label: "Browse",
-      path: "/products",
-      icon: <SearchIcon size={22} />,
+      label: "Wishlist",
+      path: user ? "/wishlist" : "/login",
+      icon: (
+        <span style={{ position: "relative", display: "inline-flex" }}>
+          <HeartIcon size={20} />
+          {user && totalWishlistItems > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: -5,
+                right: -7,
+                background: "var(--brand-danger)",
+                color: "#fff",
+                fontSize: "0.58rem",
+                fontWeight: 800,
+                minWidth: 15,
+                height: 15,
+                borderRadius: "999px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 3px",
+                lineHeight: 1,
+              }}
+            >
+              {totalWishlistItems}
+            </span>
+          )}
+        </span>
+      ),
     },
     {
       label: "Cart",
       path: user ? "/cart" : "/login",
       icon: (
         <span style={{ position: "relative", display: "inline-flex" }}>
-          <CartIcon size={22} />
+          <CartIcon size={20} />
           {totalItems > 0 && (
             <span
               style={{
                 position: "absolute",
-                top: -6,
-                right: -8,
-                background: "var(--brand-danger)",
+                top: -5,
+                right: -7,
+                background: "var(--brand-primary)",
                 color: "#fff",
-                fontSize: "0.6rem",
+                fontSize: "0.58rem",
                 fontWeight: 800,
-                minWidth: 16,
-                height: 16,
+                minWidth: 15,
+                height: 15,
                 borderRadius: "999px",
                 display: "flex",
                 alignItems: "center",
@@ -62,12 +91,12 @@ export default function MobileBottomNav() {
     {
       label: "Orders",
       path: user ? "/orders" : "/login",
-      icon: <PackageIcon size={22} />,
+      icon: <PackageIcon size={20} />,
     },
     {
       label: user ? "Account" : "Sign In",
       path: user ? "/profile" : "/login",
-      icon: <UserIcon size={22} />,
+      icon: <UserIcon size={20} />,
     },
   ];
 
@@ -77,12 +106,17 @@ export default function MobileBottomNav() {
   return (
     <nav className="mobile-bottom-nav">
       {tabs.map((tab) => {
-        const active = isActive(tab.path) || (tab.path === "/products" && location.pathname === "/products");
+        const active = isActive(tab.path);
         return (
           <button
-            key={tab.path}
+            key={tab.label}
             className={`mobile-bottom-tab ${active ? "active" : ""}`}
-            onClick={() => navigate(tab.path)}
+            onClick={() => {
+              if (tab.path === "/login" && !user) {
+                alert("Please sign in to access " + tab.label);
+              }
+              navigate(tab.path);
+            }}
           >
             <span className="mobile-tab-icon">{tab.icon}</span>
             <span className="mobile-tab-label">{tab.label}</span>

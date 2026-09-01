@@ -7,9 +7,9 @@ import {
   CheckIcon,
   ArrowRightIcon,
   ClockIcon,
+  CloseIcon,
 } from "./components/Icons";
 
-// Sample orders defined OUTSIDE component so they are always stable
 const SAMPLE_ORDERS = [
   {
     id: "ORD-948210",
@@ -49,14 +49,11 @@ export default function OrderHistory() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    setError(null);
 
-    // Load from localStorage immediately for instant render
     let storedOrders = [];
     try {
       storedOrders = JSON.parse(localStorage.getItem("user_orders") || "[]");
@@ -64,13 +61,11 @@ export default function OrderHistory() {
       storedOrders = [];
     }
 
-    // Show stored/sample orders instantly while fetching backend
     if (isMounted) {
       setOrders(storedOrders.length > 0 ? storedOrders : SAMPLE_ORDERS);
       setLoading(false);
     }
 
-    // Then try to enrich with backend orders (silently)
     const token = localStorage.getItem("accessToken");
     if (token) {
       api
@@ -79,24 +74,29 @@ export default function OrderHistory() {
           if (!isMounted) return;
           const backendOrders = Array.isArray(res.data) ? res.data : [];
           if (backendOrders.length > 0) {
-            // Normalise Prisma shape: items can be inside 'orderItems' or 'items'
             const normalised = backendOrders.map((o) => ({
               ...o,
               items: o.items || o.orderItems || [],
             }));
-            // Merge with local orders (avoid duplicates by id)
-            const merged = [
-              ...normalised,
-              ...storedOrders.filter(
-                (s) => !normalised.find((n) => n.id === s.id)
-              ),
-            ];
-            setOrders(merged.length > 0 ? merged : SAMPLE_ORDERS);
+
+            // Smart deduplication to prevent duplicate orders
+            const deduplicated = [...storedOrders];
+            normalised.forEach((bOrder) => {
+              const alreadyExists = deduplicated.some(
+                (sOrder) =>
+                  String(sOrder.id) === String(bOrder.id) ||
+                  (sOrder.total === bOrder.total &&
+                    new Date(sOrder.createdAt).getTime() === new Date(bOrder.createdAt).getTime())
+              );
+              if (!alreadyExists) {
+                deduplicated.push(bOrder);
+              }
+            });
+
+            setOrders(deduplicated.length > 0 ? deduplicated : SAMPLE_ORDERS);
           }
         })
-        .catch(() => {
-          // Silently fail — we already show local orders
-        });
+        .catch(() => {});
     }
 
     return () => {
@@ -104,8 +104,43 @@ export default function OrderHistory() {
     };
   }, []);
 
-  // Derive live status from createdAt timestamp (3-day delivery cycle)
+  const handleCancelOrder = (orderId) => {
+    if (!window.confirm(`Are you sure you want to cancel Order #${orderId}?`)) {
+      return;
+    }
+
+    const updated = orders.map((o) => {
+      if (String(o.id) === String(orderId)) {
+        return { ...o, status: "Cancelled", cancelledAt: new Date().toISOString() };
+      }
+      return o;
+    });
+
+    setOrders(updated);
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("user_orders") || "[]");
+      const updatedStored = stored.map((o) => {
+        if (String(o.id) === String(orderId)) {
+          return { ...o, status: "Cancelled", cancelledAt: new Date().toISOString() };
+        }
+        return o;
+      });
+      localStorage.setItem("user_orders", JSON.stringify(updatedStored));
+    } catch (e) {}
+  };
+
   const computeOrderInfo = (order) => {
+    if (order.status === "Cancelled") {
+      return {
+        currentStatus: "Cancelled",
+        stepIndex: -1,
+        isDelivered: false,
+        isCancelled: true,
+        deliveryDateStr: "Order Cancelled",
+      };
+    }
+
     const createdTime = new Date(order.createdAt || Date.now()).getTime();
     const deliveryTime = createdTime + 3 * 24 * 60 * 60 * 1000;
     const now = Date.now();
@@ -136,10 +171,11 @@ export default function OrderHistory() {
     }
 
     const isDelivered = now >= deliveryTime;
-    return { currentStatus, stepIndex, isDelivered, deliveryDateStr };
+    return { currentStatus, stepIndex, isDelivered, isCancelled: false, deliveryDateStr };
   };
 
   const stepClass = (current, step) => {
+    if (current === -1) return "";
     if (step < current) return "done";
     if (step === current) return "current";
     return "";
@@ -151,23 +187,6 @@ export default function OrderHistory() {
         <h1 className="orders-title">Orders &amp; Shipment Tracking</h1>
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px", marginBottom: "20px" }} />
         <div className="skeleton" style={{ height: "240px", borderRadius: "18px" }} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="orders-page">
-        <h1 className="orders-title">Orders &amp; Shipment Tracking</h1>
-        <div className="orders-empty">
-          <h2>Unable to Load Orders</h2>
-          <p style={{ color: "var(--text-muted)", marginTop: "8px", marginBottom: "20px" }}>
-            {error}
-          </p>
-          <button className="cta-primary" onClick={() => window.location.reload()}>
-            Retry
-          </button>
-        </div>
       </div>
     );
   }
@@ -214,7 +233,7 @@ export default function OrderHistory() {
               year: "numeric",
             });
 
-            const { currentStatus, stepIndex, isDelivered, deliveryDateStr } =
+            const { currentStatus, stepIndex, isDelivered, isCancelled, deliveryDateStr } =
               computeOrderInfo(order);
 
             const orderItems = order.items || order.orderItems || [];
@@ -229,6 +248,29 @@ export default function OrderHistory() {
                   </div>
 
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    {/* Cancel Order Button */}
+                    {!isDelivered && !isCancelled && (
+                      <button
+                        onClick={() => handleCancelOrder(order.id)}
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: "8px",
+                          border: "1px solid var(--brand-danger)",
+                          background: "rgba(239, 68, 68, 0.1)",
+                          fontSize: "0.82rem",
+                          color: "var(--brand-danger)",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <CloseIcon size={14} />
+                        <span>Cancel Order</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() =>
                         alert(`Invoice for Order #${order.id} will be emailed to your registered address.`)
@@ -245,12 +287,17 @@ export default function OrderHistory() {
                     >
                       Download Invoice
                     </button>
+
                     <span
                       style={{
-                        background: isDelivered
+                        background: isCancelled
+                          ? "rgba(239, 68, 68, 0.15)"
+                          : isDelivered
                           ? "rgba(16, 185, 129, 0.15)"
                           : "var(--chip-bg)",
-                        color: isDelivered
+                        color: isCancelled
+                          ? "var(--brand-danger)"
+                          : isDelivered
                           ? "var(--brand-accent)"
                           : "var(--brand-primary)",
                         fontWeight: 800,
@@ -283,7 +330,11 @@ export default function OrderHistory() {
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <ClockIcon size={16} />
                     <span>
-                      {isDelivered ? (
+                      {isCancelled ? (
+                        <span style={{ color: "var(--brand-danger)", fontWeight: 700 }}>
+                          Order has been cancelled upon user request
+                        </span>
+                      ) : isDelivered ? (
                         <>
                           Package delivered on <strong>{deliveryDateStr}</strong>
                         </>
@@ -299,29 +350,35 @@ export default function OrderHistory() {
                   </div>
                   <span
                     style={{
-                      color: isDelivered ? "var(--brand-accent)" : "var(--brand-primary)",
+                      color: isCancelled
+                        ? "var(--brand-danger)"
+                        : isDelivered
+                        ? "var(--brand-accent)"
+                        : "var(--brand-primary)",
                       fontWeight: 700,
                       fontSize: "0.82rem",
                     }}
                   >
-                    {isDelivered ? "Completed" : "In Progress"}
+                    {isCancelled ? "Cancelled" : isDelivered ? "Completed" : "In Progress"}
                   </span>
                 </div>
 
                 {/* Tracking Stepper */}
-                <div className="order-tracking-stepper">
-                  {[
-                    { label: "Ordered", icon: <CheckIcon size={13} /> },
-                    { label: "Shipped", icon: <CheckIcon size={13} /> },
-                    { label: "Out for Delivery", icon: <TruckIcon size={13} /> },
-                    { label: "Delivered", icon: <PackageIcon size={13} /> },
-                  ].map((step, idx) => (
-                    <div key={idx} className={`track-step ${stepClass(stepIndex, idx)}`}>
-                      <div className="track-step-dot">{step.icon}</div>
-                      <span className="track-step-label">{step.label}</span>
-                    </div>
-                  ))}
-                </div>
+                {!isCancelled && (
+                  <div className="order-tracking-stepper">
+                    {[
+                      { label: "Ordered", icon: <CheckIcon size={13} /> },
+                      { label: "Shipped", icon: <CheckIcon size={13} /> },
+                      { label: "Out for Delivery", icon: <TruckIcon size={13} /> },
+                      { label: "Delivered", icon: <PackageIcon size={13} /> },
+                    ].map((step, idx) => (
+                      <div key={idx} className={`track-step ${stepClass(stepIndex, idx)}`}>
+                        <div className="track-step-dot">{step.icon}</div>
+                        <span className="track-step-label">{step.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Order Items */}
                 <div className="order-items-list">

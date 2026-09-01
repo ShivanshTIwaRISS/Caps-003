@@ -116,10 +116,17 @@ export default function Products() {
             }}
           >
             <option value="all">All Categories</option>
-            <option value="smartphones">Smartphones</option>
-            <option value="laptops">Laptops</option>
-            <option value="fragrances">Fragrances</option>
-            <option value="groceries">Groceries</option>
+            <option value="smartphones">Smartphones & Mobile</option>
+            <option value="laptops">Laptops & Workstations</option>
+            <option value="fragrances">Fragrances & Luxury</option>
+            <option value="groceries">Groceries & Essentials</option>
+            <option value="mens-shoes">Footwear & Sneakers</option>
+            <option value="mens-shirts">Mens Fashion & Shirts</option>
+            <option value="womens-dresses">Womens Fashion</option>
+            <option value="watches">Watches & Timepieces</option>
+            <option value="sunglasses">Sunglasses & Eyewear</option>
+            <option value="home-decoration">Home Decoration</option>
+            <option value="furniture">Furniture & Office</option>
           </select>
         </div>
 

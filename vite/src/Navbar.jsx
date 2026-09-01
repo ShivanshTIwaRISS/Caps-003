@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { useWishlist } from "./WishlistContext";
 import { useTheme } from "./ThemeContext";
 import { getSearchSuggestions } from "./services/productService";
-import { Link } from "react-router-dom";
 import {
   SearchIcon,
   CartIcon,
@@ -12,6 +12,7 @@ import {
   LogOutIcon,
   SunIcon,
   MoonIcon,
+  HeartIcon,
 } from "./components/Icons";
 
 export default function Navbar() {
@@ -20,6 +21,7 @@ export default function Navbar() {
   const profileRef = useRef(null);
 
   const { totalItems } = useCart();
+  const { totalWishlistItems } = useWishlist();
   const { isDark, toggleTheme } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,7 +38,6 @@ export default function Navbar() {
     }
   });
 
-  // Sync user across tabs / after login
   useEffect(() => {
     const syncUser = () => {
       try {
@@ -50,7 +51,6 @@ export default function Navbar() {
     return () => window.removeEventListener("storage", syncUser);
   }, []);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (
@@ -67,7 +67,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Live search suggestions with debounce
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -176,7 +175,29 @@ export default function Navbar() {
 
         {/* RIGHT ACTIONS */}
         <div className="nav-right">
-          {/* Orders Link (signed in only) */}
+          {/* Wishlist Button */}
+          <button
+            className="nav-icon-btn"
+            onClick={() => {
+              if (!user) {
+                alert("Please sign in to view your saved Wishlist.");
+                navigate("/login");
+              } else {
+                navigate("/wishlist");
+              }
+            }}
+            title="Saved Wishlist"
+            aria-label="Wishlist"
+          >
+            <HeartIcon size={18} />
+            {user && totalWishlistItems > 0 && (
+              <span className="nav-badge" style={{ background: "var(--brand-danger)" }}>
+                {totalWishlistItems}
+              </span>
+            )}
+          </button>
+
+          {/* Orders Link */}
           {user && (
             <button
               className="nav-icon-btn"
@@ -201,7 +222,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Theme Toggle — shown for EVERYONE; in Settings too for logged-in users */}
+          {/* Theme Toggle */}
           <button
             className="nav-icon-btn"
             onClick={toggleTheme}
@@ -211,7 +232,6 @@ export default function Navbar() {
             {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
 
-          {/* Not signed in → Sign In / Sign Up buttons */}
           {!user && (
             <>
               <button
@@ -229,7 +249,6 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Signed in → Avatar dropdown */}
           {user && (
             <div className="nav-profile" ref={profileRef}>
               <div
@@ -246,6 +265,17 @@ export default function Navbar() {
                     <div className="profile-name">{user.name}</div>
                     <div className="profile-email">{user.email}</div>
                   </div>
+
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => {
+                      navigate("/wishlist");
+                      setShowProfileMenu(false);
+                    }}
+                  >
+                    <HeartIcon size={16} />
+                    <span>My Wishlist ({totalWishlistItems})</span>
+                  </button>
 
                   <button
                     className="profile-menu-item"

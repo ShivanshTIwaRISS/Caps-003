@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { useWishlist } from "./WishlistContext";
 import { getProductById, getProducts } from "./services/productService";
 import ProductCard from "./ProductCard";
 import {
@@ -11,12 +12,14 @@ import {
   TruckIcon,
   ShieldIcon,
   PackageIcon,
+  HeartIcon,
 } from "./components/Icons";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItemToCart, cartItems } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   const [product, setProduct] = useState(null);
   const [activeImage, setActiveImage] = useState("");
@@ -33,6 +36,8 @@ export default function ProductDetails() {
   const isInCart = cartItems.some(
     (i) => i.productId === Number(id) || i.id === Number(id)
   );
+
+  const isWishlisted = product ? isInWishlist(product.id) : false;
 
   useEffect(() => {
     let isCurrent = true;
@@ -209,7 +214,28 @@ export default function ProductDetails() {
 
         {/* DETAILS */}
         <div className="pd-info">
-          <span className="pd-brand-tag">{product.brand || product.category || "OS Choice"}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="pd-brand-tag">{product.brand || product.category || "OS Choice"}</span>
+            <button
+              onClick={() => toggleWishlist(product)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                borderRadius: "999px",
+                background: isWishlisted ? "rgba(239, 68, 68, 0.15)" : "var(--bg-subtle)",
+                color: isWishlisted ? "var(--brand-danger)" : "var(--text-muted)",
+                border: "1px solid var(--panel-border)",
+                fontWeight: 700,
+                fontSize: "0.84rem",
+              }}
+            >
+              <HeartIcon size={16} filled={isWishlisted} />
+              <span>{isWishlisted ? "Saved to Wishlist" : "Add to Wishlist"}</span>
+            </button>
+          </div>
+
           <h1 className="pd-title">{product.title}</h1>
 
           {/* Rating */}

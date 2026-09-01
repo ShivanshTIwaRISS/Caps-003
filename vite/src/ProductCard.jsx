@@ -1,25 +1,27 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-import { StarIcon, CartIcon, CheckIcon } from "./components/Icons";
+import { useWishlist } from "./WishlistContext";
+import { StarIcon, CartIcon, CheckIcon, HeartIcon } from "./components/Icons";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const { addItemToCart, cartItems } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [addedAnim, setAddedAnim] = useState(false);
 
   const user = localStorage.getItem("user");
 
   const openProduct = () => navigate(`/product/${product.id}`);
 
-  // Check if item already exists in cart
   const isInCart = cartItems.some(
     (i) => i.productId === product.id || i.id === product.id
   );
 
+  const isWishlisted = isInWishlist(product.id);
+
   const handleAddToCart = (e) => {
     e.stopPropagation();
-
     if (!user) {
       navigate("/login");
       return;
@@ -36,10 +38,9 @@ export default function ProductCard({ product }) {
     setTimeout(() => setAddedAnim(false), 1200);
   };
 
-  const getDeliveryDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 2);
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const handleToggleWishlist = (e) => {
+    e.stopPropagation();
+    toggleWishlist(product);
   };
 
   return (
@@ -58,10 +59,37 @@ export default function ProductCard({ product }) {
           </span>
         )}
 
+        {/* Wishlist Heart Button */}
+        <button
+          className={`wishlist-card-btn ${isWishlisted ? "active" : ""}`}
+          onClick={handleToggleWishlist}
+          title={isWishlisted ? "Remove from Wishlist" : "Save to Wishlist"}
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: isWishlisted ? "rgba(239, 68, 68, 0.9)" : "rgba(19, 23, 34, 0.75)",
+            backdropFilter: "blur(6px)",
+            color: isWishlisted ? "#ffffff" : "#ffffff",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            borderRadius: "50%",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 3,
+            transition: "all 0.2s ease",
+          }}
+        >
+          <HeartIcon size={15} filled={isWishlisted} />
+        </button>
+
         {product.rating >= 4.4 && (
-          <span className="product-top-badge">
+          <span className="product-top-badge" style={{ left: "10px", right: "auto", top: "auto", bottom: "10px" }}>
             <StarIcon size={12} filled={true} />
-            <span>{product.rating} Top Rated</span>
+            <span>{product.rating}</span>
           </span>
         )}
       </div>
@@ -77,7 +105,7 @@ export default function ProductCard({ product }) {
             {Array.from({ length: 5 }).map((_, i) => (
               <StarIcon
                 key={i}
-                size={14}
+                size={13}
                 filled={i < Math.round(product.rating || 4)}
               />
             ))}
@@ -93,10 +121,6 @@ export default function ProductCard({ product }) {
             </span>
           )}
         </div>
-
-        <p className="product-delivery-tag">
-          Free Delivery by <strong>{getDeliveryDate()}</strong>
-        </p>
 
         {/* Cart Action Button */}
         {!isInCart ? (
