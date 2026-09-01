@@ -1,13 +1,24 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 
 export default function Login({ form, handleChange, handleLogin }) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     const u = localStorage.getItem("user");
-    if (u) navigate("/home");
-  }, []);
+    if (u) navigate("/");
+  }, [navigate]);
+
+  const onSubmitWrapper = async (e) => {
+    setLoading(true);
+    try {
+      await handleLogin(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -20,14 +31,16 @@ export default function Login({ form, handleChange, handleLogin }) {
           <div className="welcome-strip">
             <div className="welcome-badge">OS</div>
             <div>
-              <h1>Welcome to OS</h1>
-              <p>Sign in or create your account in seconds.</p>
+              <h1 style={{ fontSize: "1.3rem", fontWeight: 800 }}>Welcome Back</h1>
+              <p style={{ fontSize: "0.84rem", color: "var(--text-muted)" }}>
+                Sign in to your OS account to access cart and orders.
+              </p>
             </div>
           </div>
 
-          <form className="auth-card" onSubmit={handleLogin}>
+          <form className="auth-card" onSubmit={onSubmitWrapper} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <FormField
-              label="Email"
+              label="Email Address"
               name="email"
               value={form.email}
               onChange={handleChange}
@@ -44,16 +57,23 @@ export default function Login({ form, handleChange, handleLogin }) {
               type="password"
             />
 
-            <button type="submit" className="cta">Login</button>
+            <button
+              type="submit"
+              className="cta-primary"
+              disabled={loading}
+              style={{ width: "100%", justifyContent: "center", marginTop: "8px" }}
+            >
+              {loading ? "Signing in..." : "Sign In to OS"}
+            </button>
 
-            <p className="swap">
+            <p style={{ textAlign: "center", fontSize: "0.88rem", color: "var(--text-muted)", marginTop: "10px" }}>
               Don’t have an account?{" "}
               <button
                 type="button"
-                className="linklike"
                 onClick={() => navigate("/signup")}
+                style={{ color: "var(--brand-primary)", fontWeight: 700, textDecoration: "underline" }}
               >
-                Create one
+                Create one for free
               </button>
             </p>
           </form>
@@ -66,8 +86,8 @@ export default function Login({ form, handleChange, handleLogin }) {
 /* ------------------ FormField ------------------ */
 function FormField({ label, name, value, onChange, placeholder, type = "text" }) {
   return (
-    <label className="field">
-      <span>{label}</span>
+    <div className="form-group">
+      <label>{label}</label>
       <input
         name={name}
         value={value}
@@ -77,7 +97,7 @@ function FormField({ label, name, value, onChange, placeholder, type = "text" })
         required
         autoComplete={name}
       />
-    </label>
+    </div>
   );
 }
 
@@ -91,40 +111,26 @@ function MarketingPane() {
           "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
           "https://images.unsplash.com/photo-1511385348-a52b4a160dc2?q=80&w=1600&auto=format&fit=crop",
           "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=1600&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1600&auto=format&fit=crop"
         ].map((src, i) => (
           <div className="slide" key={i} style={{ backgroundImage: `url(${src})` }} />
         ))}
       </div>
 
       <div className="stat stat-a">
-        <div className="stat-title">Active Carts</div>
-        <div className="stat-value">1,274</div>
-        <TinyBars />
+        <div className="stat-title">Active Shoppers</div>
+        <div className="stat-value">50,000+</div>
       </div>
 
       <div className="stat stat-b">
-        <div className="stat-title">Avg. Response</div>
-        <div className="stat-value">134 ms</div>
-        <TinyBars />
+        <div className="stat-title">Avg. Latency</div>
+        <div className="stat-value">0 ms</div>
       </div>
 
       <ul className="usp">
-        <li>Secure checkout</li>
-        <li>Blazing fast</li>
-        <li>Developer-first APIs</li>
-        <li>Analytics-ready</li>
+        <li>🔒 256-Bit SSL Checkout</li>
+        <li>⚡ Instant Delivery</li>
+        <li>🛡️ 7-Day Replacement</li>
       </ul>
-    </div>
-  );
-}
-
-function TinyBars() {
-  return (
-    <div className="bars">
-      {Array.from({ length: 14 }).map((_, i) => (
-        <span key={i} style={{ animationDelay: `${i * 0.08}s` }} />
-      ))}
     </div>
   );
 }
