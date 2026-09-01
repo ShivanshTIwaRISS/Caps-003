@@ -18,6 +18,7 @@ import Cart from "./Cart";
 import OrderHistory from "./OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./Profile";
+import MobileBottomNav from "./MobileBottomNav";
 
 
 
@@ -186,6 +187,7 @@ export default function App() {
         {/* Unknown routes → HOME */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <MobileBottomNav />
     </div>
   );
 }
