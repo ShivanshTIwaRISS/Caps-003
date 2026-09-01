@@ -191,7 +191,25 @@ export default function Checkout() {
     setPlacedOrderId(newOrderId);
     setOrderPlaced(true);
     setLoading(false);
+
+    // Instant scroll to top when order is placed
+    try { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); } catch (e) { window.scrollTo(0, 0); }
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
   };
+
+  useEffect(() => {
+    if (orderPlaced) {
+      const resetScroll = () => {
+        try { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); } catch (e) { window.scrollTo(0, 0); }
+        if (document.documentElement) document.documentElement.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+      };
+      resetScroll();
+      const t = setTimeout(resetScroll, 20);
+      return () => clearTimeout(t);
+    }
+  }, [orderPlaced]);
 
   if (orderPlaced) {
     return (

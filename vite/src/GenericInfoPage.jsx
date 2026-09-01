@@ -66,6 +66,9 @@ export default function GenericInfoPage() {
 
     setValidatedOrder(foundOrder);
     setReturnSubmitted(true);
+    try { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); } catch (e) { window.scrollTo(0, 0); }
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
   };
 
   const faqs = [
