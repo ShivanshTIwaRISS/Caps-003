@@ -2558,6 +2558,21 @@ input, select, textarea {
     flex-shrink: 0;
   }
 
+  .nav-profile {
+    position: relative !important;
+  }
+
+  .profile-dropdown {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: -4px !important;
+    left: auto !important;
+    width: 220px !important;
+    max-width: calc(100vw - 20px) !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7) !important;
+    z-index: 1000 !important;
+  }
+
   .nav-icon-btn {
     width: 34px !important;
     height: 34px !important;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { CheckIcon, ArrowLeftIcon } from "./components/Icons";
+import { CheckIcon, ArrowLeftIcon, ShieldIcon } from "./components/Icons";
 
 export default function GenericInfoPage() {
   const { page } = useParams();
@@ -8,9 +8,65 @@ export default function GenericInfoPage() {
 
   const [returnOrderId, setReturnOrderId] = useState("");
   const [returnReason, setReturnReason] = useState("defective");
+  const [returnError, setReturnError] = useState("");
   const [returnSubmitted, setReturnSubmitted] = useState(false);
+  const [validatedOrder, setValidatedOrder] = useState(null);
 
   const [openFaq, setOpenFaq] = useState(0);
+
+  const handleReturnSubmit = (e) => {
+    e.preventDefault();
+    setReturnError("");
+
+    const queryId = returnOrderId.trim().toUpperCase();
+    if (!queryId) {
+      setReturnError("Please enter your Order ID.");
+      return;
+    }
+
+    // Retrieve user orders from localStorage or default list
+    let allOrders = [];
+    try {
+      allOrders = JSON.parse(localStorage.getItem("user_orders") || "[]");
+    } catch (e) {
+      allOrders = [];
+    }
+
+    // Include sample orders for verification if no local orders exist
+    const defaultSampleOrders = [
+      { id: "ORD-948210", status: "Shipped", total: 54999 },
+      { id: "ORD-832104", status: "Delivered", total: 4499 },
+    ];
+
+    const pool = [...allOrders, ...defaultSampleOrders];
+
+    const foundOrder = pool.find(
+      (o) => String(o.id).toUpperCase() === queryId || String(o.id).replace(/\D/g, "") === queryId.replace(/\D/g, "")
+    );
+
+    if (!foundOrder) {
+      setReturnError(
+        `Order ID "${queryId}" not found in your account. Please enter a valid Order ID (e.g. ORD-832104 or ORD-948210).`
+      );
+      return;
+    }
+
+    // Check delivery status
+    if (foundOrder.status === "Cancelled") {
+      setReturnError(`Order #${foundOrder.id} is cancelled. Cancelled orders cannot be returned.`);
+      return;
+    }
+
+    if (foundOrder.status !== "Delivered") {
+      setReturnError(
+        `Return cannot be requested yet. Order #${foundOrder.id} status is currently '${foundOrder.status}'. Returns are only permitted for 'Delivered' orders within 7 days.`
+      );
+      return;
+    }
+
+    setValidatedOrder(foundOrder);
+    setReturnSubmitted(true);
+  };
 
   const faqs = [
     {
@@ -152,48 +208,79 @@ export default function GenericInfoPage() {
           {returnSubmitted ? (
             <div
               style={{
-                background: "rgba(16, 185, 129, 0.15)",
-                padding: "20px",
-                borderRadius: "14px",
-                textAlign: "center",
+                background: "rgba(16, 185, 129, 0.12)",
+                border: "1px solid var(--brand-accent)",
+                padding: "24px",
+                borderRadius: "16px",
+                textAlign: "left",
               }}
             >
-              <h3 style={{ color: "var(--brand-accent)", marginBottom: "6px" }}>
-                Return Request Submitted
-              </h3>
-              <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
-                Our logistics partner will contact you within 24 hours to schedule pickup for Order #{returnOrderId}.
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--brand-accent)", marginBottom: "12px" }}>
+                <CheckIcon size={24} />
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 800 }}>Return Request Confirmed</h3>
+              </div>
+              <p style={{ fontSize: "0.92rem", color: "var(--text)", lineHeight: 1.6, marginBottom: "12px" }}>
+                Return authorization for <strong>Order #{validatedOrder?.id}</strong> has been generated successfully.
               </p>
+              <div style={{ background: "var(--panel)", padding: "14px", borderRadius: "10px", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "16px" }}>
+                <div><strong>Return Waybill:</strong> RET-IN-{validatedOrder?.id}</div>
+                <div><strong>Pickup Agent:</strong> OS Express Courier</div>
+                <div><strong>Est. Pickup:</strong> Within 24-48 Hours</div>
+              </div>
+              <button
+                className="cta-secondary"
+                onClick={() => {
+                  setReturnSubmitted(false);
+                  setReturnOrderId("");
+                }}
+                style={{ fontSize: "0.85rem", padding: "8px 16px" }}
+              >
+                Submit Another Return
+              </button>
             </div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!returnOrderId) return alert("Please enter your Order ID.");
-                setReturnSubmitted(true);
-              }}
-              style={{ display: "flex", flexDirection: "column", gap: "14px", maxWidth: "480px" }}
-            >
+            <form onSubmit={handleReturnSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "520px" }}>
+              {returnError && (
+                <div
+                  style={{
+                    background: "rgba(239, 68, 68, 0.12)",
+                    border: "1px solid var(--brand-danger)",
+                    color: "var(--brand-danger)",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    fontSize: "0.88rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {returnError}
+                </div>
+              )}
+
               <div className="form-group">
-                <label>Order ID</label>
+                <label>Order ID (From Order History)</label>
                 <input
-                  placeholder="e.g. ORD-948210"
+                  placeholder="e.g. ORD-832104"
                   value={returnOrderId}
                   onChange={(e) => setReturnOrderId(e.target.value)}
                   required
                 />
+                <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Only Delivered orders within 7 days of purchase are eligible for returns.
+                </span>
               </div>
+
               <div className="form-group">
-                <label>Reason for Return</label>
+                <label>Reason for Return / Replacement</label>
                 <select value={returnReason} onChange={(e) => setReturnReason(e.target.value)}>
-                  <option value="defective">Item defective or damaged</option>
-                  <option value="damaged">Packaging damaged during transit</option>
-                  <option value="wrong_item">Received wrong item or model</option>
-                  <option value="quality">Performance not as described</option>
+                  <option value="defective">Item defective or hardware fault</option>
+                  <option value="damaged">Outer packaging / seal damaged</option>
+                  <option value="wrong_item">Received wrong color, size, or model</option>
+                  <option value="quality">Performance not matching specifications</option>
                 </select>
               </div>
-              <button type="submit" className="cta-primary" style={{ marginTop: "8px" }}>
-                Submit Return Request
+
+              <button type="submit" className="cta-primary" style={{ marginTop: "8px", justifyContent: "center" }}>
+                Verify & Submit Return Request
               </button>
             </form>
           )}

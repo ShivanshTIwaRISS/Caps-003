@@ -87,10 +87,14 @@ export default function Checkout() {
     }
   };
 
+  const [finalPaidAmount, setFinalPaidAmount] = useState(0);
+
   const executeOrderPlacement = async () => {
     setLoading(true);
     setShowCodModal(false);
     const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
+    const currentGrandTotal = grandTotal;
+    setFinalPaidAmount(currentGrandTotal);
 
     const orderData = {
       id: newOrderId,
@@ -102,7 +106,7 @@ export default function Checkout() {
         quantity: item.quantity || 1,
         thumbnail: item.thumbnail,
       })),
-      total: grandTotal,
+      total: currentGrandTotal,
       address,
       paymentMethod,
       status: "Order Confirmed",
@@ -171,8 +175,12 @@ export default function Checkout() {
               <strong style={{ textTransform: "uppercase" }}>{paymentMethod}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>Total Paid / Due:</span>
-              <strong>₹{grandTotal.toLocaleString("en-IN")}</strong>
+              <span style={{ color: "var(--text-muted)" }}>
+                {paymentMethod === "cod" ? "Cash Amount Due on Delivery:" : "Total Paid:"}
+              </span>
+              <strong style={{ color: paymentMethod === "cod" ? "var(--brand-warning)" : "var(--brand-accent)" }}>
+                ₹{finalPaidAmount.toLocaleString("en-IN")}
+              </strong>
             </div>
           </div>
 

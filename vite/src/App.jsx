@@ -1,8 +1,19 @@
-import { useState } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import "./index.css";
 import api from "./services/api";
 import { WishlistProvider } from "./WishlistContext";
+
+// Scroll to Top on page transition
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
+
+  return null;
+}
 
 // Layout
 import Navbar from "./Navbar";
@@ -63,6 +74,7 @@ export default function App() {
 
   return (
     <WishlistProvider>
+      <ScrollToTop />
       <div className="os-root">
         <Routes>
           <Route
