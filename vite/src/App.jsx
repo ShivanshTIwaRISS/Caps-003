@@ -4,13 +4,25 @@ import "./index.css";
 import api from "./services/api";
 import { WishlistProvider } from "./WishlistContext";
 
-// Scroll to Top on page transition
+// Scroll to Top on every page transition or query change
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [pathname]);
+    const scrollToTopNow = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    };
+
+    scrollToTopNow();
+    const timer = setTimeout(scrollToTopNow, 20);
+    return () => clearTimeout(timer);
+  }, [pathname, search]);
 
   return null;
 }
