@@ -8,7 +8,6 @@ import {
   ShieldIcon,
   TruckIcon,
   CheckIcon,
-  SparklesIcon,
 } from "./components/Icons";
 
 export default function Home() {
@@ -84,7 +83,7 @@ export default function Home() {
       <section className="neo-hero">
         <div className="neo-hero-left">
           <span className="hero-kicker">
-            <SparklesIcon size={14} /> India's Favourite Online Store
+            India's Favourite Online Store
           </span>
           <h1>
             Everything You Need, <span>All in One Place</span>
@@ -314,9 +313,9 @@ export default function Home() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div style={{ color: "var(--brand-warning)" }}><SparklesIcon size={28} /></div>
+          <div style={{ color: "var(--brand-warning)" }}><CheckIcon size={28} /></div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>100% Authentic Products</div>
+            <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>100% Authentic Products</div>
             <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Verified sellers across all categories</div>
           </div>
         </div>

@@ -155,28 +155,52 @@ export async function getProducts({
 
   const skip = (page - 1) * limit;
 
-  // Always fetch from DummyJSON directly (backend may not support all filter params)
+  // For category and search queries, DummyJSON returns ALL items at once
+  // So we fetch all and do client-side pagination to make it work correctly
   const fetchDirect = async () => {
-    let url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}`;
+    let url;
+    let isFullDataset = false;
+
     if (search) {
-      url = `https://dummyjson.com/products/search?q=${encodeURIComponent(search)}&limit=${limit}&skip=${skip}`;
+      // Search: fetch all matching and paginate client-side
+      url = `https://dummyjson.com/products/search?q=${encodeURIComponent(search)}&limit=200&skip=0`;
+      isFullDataset = true;
     } else if (category && category !== "all") {
+      // Category: returns all items in that category
       url = `https://dummyjson.com/products/category/${category.toLowerCase()}`;
+      isFullDataset = true;
+    } else {
+      // All products: use server-side pagination (DummyJSON supports this)
+      url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}&select=id,title,price,thumbnail,rating,category,stock,discountPercentage`;
     }
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("Direct fetch failed");
     const data = await res.json();
 
-    let items = (data.products || []).map(enhanceProduct);
-    items = applyFilters(items, { rating, price, sort });
+    if (isFullDataset) {
+      // Apply filters on the full dataset, then paginate
+      let allItems = (data.products || []).map(enhanceProduct);
+      allItems = applyFilters(allItems, { rating, price, sort });
 
-    return {
-      products: items,
-      total: items.length,
-      page: Number(page),
-      totalPages: Math.ceil(items.length / limit) || 1,
-    };
+      const total = allItems.length;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const pageItems = allItems.slice(skip, skip + limit);
+
+      return { products: pageItems, total, page: Number(page), totalPages };
+    } else {
+      // For "all" products, the API gives us accurate total count
+      let items = (data.products || []).map(enhanceProduct);
+      items = applyFilters(items, { rating, price, sort });
+      const apiTotal = data.total || items.length;
+
+      return {
+        products: items,
+        total: apiTotal,
+        page: Number(page),
+        totalPages: Math.max(1, Math.ceil(apiTotal / limit)),
+      };
+    }
   };
 
   const fetchBackend = async () => {
@@ -184,7 +208,6 @@ export async function getProducts({
       params: { page, limit, search, category, rating, price, sort },
       timeout: 2500,
     });
-    // Always re-apply client-side filters on backend results too
     let items = (res.data.products || []).map(enhanceProduct);
     items = applyFilters(items, { rating, price, sort });
     return {

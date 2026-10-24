@@ -1,46 +1,46 @@
 /* ==========================================================================
-   OS LUXURY E-COMMERCE DESIGN SYSTEM (EXECUTIVE PALETTE - NO EMOJIS)
+   OS STORE — DESIGN SYSTEM
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* --- Root Color Tokens (Dark Theme Default: Midnight Titanium) --- */
+/* --- Root Color Tokens (Dark: Pure Black + Blue) --- */
 :root,
 [data-theme="dark"] {
-  --bg: #090b10;
-  --bg-gradient: radial-gradient(circle at 50% -20%, #171c2b 0%, #090b10 70%);
-  --bg-subtle: #10141f;
-  --panel: #131722;
-  --panel-elevated: #1a2030;
-  --panel-glass: rgba(19, 23, 34, 0.85);
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --panel-border-hover: rgba(59, 130, 246, 0.45);
+  --bg: #000000;
+  --bg-gradient: #000000;
+  --bg-subtle: #0d0d0d;
+  --panel: #111111;
+  --panel-elevated: #1a1a1a;
+  --panel-glass: rgba(17, 17, 17, 0.92);
+  --panel-border: rgba(255, 255, 255, 0.09);
+  --panel-border-hover: rgba(37, 99, 235, 0.5);
   
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text: #f0f0f0;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
   
-  --brand-primary: #3b82f6;
-  --brand-primary-hover: #2563eb;
-  --brand-secondary: #0ea5e9;
+  --brand-primary: #2563eb;
+  --brand-primary-hover: #1d4ed8;
+  --brand-secondary: #3b82f6;
   --brand-accent: #10b981;
   --brand-warning: #f59e0b;
   --brand-danger: #ef4444;
   
-  --chip-bg: rgba(59, 130, 246, 0.12);
-  --chip-text: #60a5fa;
+  --chip-bg: rgba(37, 99, 235, 0.14);
+  --chip-text: #93c5fd;
   
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 24px rgba(59, 130, 246, 0.25);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.85);
+  --shadow-glow: none;
   
-  --skeleton-base: #161b29;
-  --skeleton-highlight: #232a3d;
+  --skeleton-base: #1a1a1a;
+  --skeleton-highlight: #252525;
 
-  --nav-bg: rgba(9, 11, 16, 0.9);
-  --input-bg: #161b29;
-  --input-border: rgba(255, 255, 255, 0.12);
+  --nav-bg: rgba(0, 0, 0, 0.95);
+  --input-bg: #181818;
+  --input-border: rgba(255, 255, 255, 0.11);
 }
 
 /* --- Light Theme Color Tokens (Clean Minimalist Platinum) --- */
@@ -96,16 +96,15 @@ html {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--bg);
-  background-image: var(--bg-gradient);
-  background-attachment: fixed;
   color: var(--text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
   max-width: 100vw;
 }
@@ -116,7 +115,7 @@ img, video, iframe {
 }
 
 h1, h2, h3, h4, h5, h6, .brand, .hero-kicker, .nav-btn, .product-price {
-  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -178,11 +177,10 @@ input, select, textarea {
 }
 
 .brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-  box-shadow: var(--shadow-glow);
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--brand-primary);
 }
 
 .brand-tag {
@@ -329,7 +327,6 @@ input, select, textarea {
 .nav-icon-btn:hover {
   border-color: var(--brand-primary);
   background: var(--panel-elevated);
-  transform: translateY(-2px);
 }
 
 .nav-badge {
@@ -370,12 +367,10 @@ input, select, textarea {
 .nav-signup-btn {
   background: var(--brand-primary);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
 }
 
 .nav-signup-btn:hover {
   background: var(--brand-primary-hover);
-  transform: translateY(-2px);
 }
 
 .nav-profile {
@@ -385,21 +380,20 @@ input, select, textarea {
 .profile-avatar {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  border-radius: 10px;
+  background: var(--brand-primary);
   color: #fff;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .profile-avatar:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-glow);
+  opacity: 0.85;
 }
 
 .profile-dropdown {
@@ -477,16 +471,15 @@ input, select, textarea {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
-  padding: 6px 14px;
-  border-radius: 999px;
+  padding: 5px 12px;
+  border-radius: 6px;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .nav-sub-item:hover, .nav-sub-item.active {
   color: var(--text);
   background: var(--panel);
-  box-shadow: var(--shadow-sm);
 }
 
 .nav-sub-item.deal-highlight {
@@ -526,13 +519,12 @@ input, select, textarea {
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  border-radius: 10px;
+  background: var(--brand-primary);
   color: #fff;
   font-weight: 800;
   font-size: 1.2rem;
   margin-bottom: 16px;
-  box-shadow: var(--shadow-glow);
 }
 
 .auth-header h2 {
@@ -557,19 +549,17 @@ input, select, textarea {
 .auth-submit-btn {
   width: 100%;
   padding: 13px;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--brand-primary);
   color: #fff;
   font-size: 0.95rem;
   font-weight: 700;
-  box-shadow: var(--shadow-glow);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   margin-top: 6px;
 }
 
 .auth-submit-btn:hover {
   background: var(--brand-primary-hover);
-  transform: translateY(-2px);
 }
 
 .auth-switch {
@@ -633,13 +623,12 @@ input, select, textarea {
   background: var(--chip-bg);
   color: var(--chip-text);
   font-size: 0.82rem;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 999px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
   width: fit-content;
   border: 1px solid var(--panel-border);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .neo-hero-left h1 {
@@ -672,40 +661,36 @@ input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 26px;
+  padding: 12px 24px;
   background: var(--brand-primary);
   color: #fff;
   font-weight: 700;
   font-size: 0.95rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow-glow);
-  transition: all 0.25s ease;
+  border-radius: 8px;
+  transition: background 0.2s ease;
 }
 
 .cta-primary:hover {
   background: var(--brand-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
 }
 
 .cta-secondary {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 24px;
+  padding: 12px 24px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   color: var(--text);
   font-weight: 700;
   font-size: 0.95rem;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .cta-secondary:hover {
   border-color: var(--brand-primary);
   background: var(--panel-elevated);
-  transform: translateY(-2px);
 }
 
 .home-categories {
@@ -718,14 +703,14 @@ input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 0.85rem;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 0.84rem;
   font-weight: 600;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   color: var(--text-muted);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .chip:hover {
@@ -747,19 +732,18 @@ input, select, textarea {
 
 .neo-tile {
   position: relative;
-  border-radius: 20px;
+  border-radius: 12px;
   background-size: cover;
   background-position: center;
   overflow: hidden;
   border: 1px solid var(--panel-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .neo-tile:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  opacity: 0.9;
 }
 
 .neo-tile--main {
@@ -789,12 +773,10 @@ input, select, textarea {
 .neo-pill {
   display: inline-block;
   font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 3px 8px;
+  font-weight: 700;
+  padding: 3px 7px;
   background: var(--brand-primary);
-  border-radius: 6px;
+  border-radius: 4px;
   margin-bottom: 6px;
 }
 
@@ -892,9 +874,8 @@ input, select, textarea {
 }
 
 .flash-card:hover {
-  transform: translateY(-4px);
   border-color: var(--brand-primary);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .flash-card-img {
@@ -1011,17 +992,16 @@ input, select, textarea {
   position: relative;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 18px;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .product-card:hover {
-  transform: translateY(-6px);
   border-color: var(--panel-border-hover);
   box-shadow: var(--shadow-md);
 }
@@ -1042,7 +1022,7 @@ input, select, textarea {
 }
 
 .product-card:hover .product-card-img {
-  transform: scale(1.06);
+  transform: scale(1.03);
 }
 
 .product-discount-badge {
@@ -1336,10 +1316,25 @@ input, select, textarea {
   color: var(--brand-primary);
 }
 
+.page-btn:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
 .page-btn.active {
   background: var(--brand-primary);
   color: #fff;
   border-color: var(--brand-primary);
+}
+
+.page-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  user-select: none;
 }
 
 /* ==========================================================================

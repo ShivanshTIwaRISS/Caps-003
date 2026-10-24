@@ -232,18 +232,65 @@ export default function Products() {
       {/* PAGINATION */}
       {totalPages > 1 && (
         <div className="pagination">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              className={`page-btn ${page === i + 1 ? "active" : ""}`}
-              onClick={() => {
-                setPage(i + 1);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {/* Prev */}
+          <button
+            className="page-btn"
+            disabled={page === 1}
+            onClick={() => { setPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            style={{ opacity: page === 1 ? 0.35 : 1 }}
+          >
+            &#8592;
+          </button>
+
+          {/* Smart page window */}
+          {(() => {
+            const pages = [];
+            const delta = 2;
+            const left = Math.max(2, page - delta);
+            const right = Math.min(totalPages - 1, page + delta);
+
+            // Always show page 1
+            pages.push(
+              <button key={1} className={`page-btn ${page === 1 ? "active" : ""}`}
+                onClick={() => { setPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                1
+              </button>
+            );
+
+            if (left > 2) pages.push(<span key="l-ellipsis" className="page-ellipsis">…</span>);
+
+            for (let i = left; i <= right; i++) {
+              pages.push(
+                <button key={i} className={`page-btn ${page === i ? "active" : ""}`}
+                  onClick={() => { setPage(i); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                  {i}
+                </button>
+              );
+            }
+
+            if (right < totalPages - 1) pages.push(<span key="r-ellipsis" className="page-ellipsis">…</span>);
+
+            if (totalPages > 1) {
+              pages.push(
+                <button key={totalPages} className={`page-btn ${page === totalPages ? "active" : ""}`}
+                  onClick={() => { setPage(totalPages); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                  {totalPages}
+                </button>
+              );
+            }
+
+            return pages;
+          })()}
+
+          {/* Next */}
+          <button
+            className="page-btn"
+            disabled={page === totalPages}
+            onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            style={{ opacity: page === totalPages ? 0.35 : 1 }}
+          >
+            &#8594;
+          </button>
         </div>
       )}
     </div>
