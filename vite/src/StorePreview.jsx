@@ -202,7 +202,9 @@ export default function Home() {
               className="flash-card"
               onClick={() => navigate(`/product/${deal.id}`)}
             >
-              <img src={deal.thumbnail} alt={deal.title} className="flash-card-img" />
+              <div className="flash-card-img-wrap">
+                <img src={deal.thumbnail} alt={deal.title} className="flash-card-img" />
+              </div>
               <div className="flash-card-title">{deal.title}</div>
               <div className="flash-prices">
                 <span className="flash-price">₹{deal.price.toLocaleString("en-IN")}</span>
@@ -211,12 +213,14 @@ export default function Home() {
               <div className="flash-progress-bar">
                 <div
                   className="flash-progress-fill"
-                  style={{ width: `${Math.min(85, deal.stock * 3)}%` }}
+                  style={{ width: `${Math.min(90, Math.max(25, deal.stock * 3.5))}%` }}
                 />
               </div>
               <div className="flash-stock-text">
-                <span>High Demand</span>
-                <span>{deal.stock} units remaining</span>
+                <span className="flash-stock-status">
+                  <span className="pulse-dot" /> High Demand
+                </span>
+                <span className="flash-stock-count">{deal.stock} units left</span>
               </div>
             </div>
           ))}
